@@ -9,7 +9,7 @@
     <script type='text/javascript' src="./build/d3-bubbletreemap.js"></script>
     <script>
         let working = false;
-        const rootTitle = 'skin-UBERON:0002097';
+        var rootTitle = 'skin-UBERON:0002097';
         const LEAF_SIZE = 6;
         const ARC_WIDTH = 3;
         
@@ -78,6 +78,13 @@
           node.size = leaves.size;
         }
 
+        function onSelect(selectEl) {
+          selectEl.disabled = true;
+          rootTitle = selectEl.value;
+          doIt();
+          selectEl.disabled = false;
+        }
+
         function drawChart(data, svg, padding, curvature) {
             // Create hierarchy.
             let root = d3.hierarchy(data)
@@ -130,15 +137,30 @@
         }
     </script>
 </head>
-<body onload="doIt()" style="width:100%;height:99%;margin:0;padding:0;">
-    <div id="svgCirclesContainer" style="width: 50%; height: 100%;margin:auto">
+<body onload="doIt()">
+    <select name="organs" onchange="onSelect(this)">
+      <option value="Blood-UBERON:0000178">Blood</option>
+      <option value="Bone marrow-UBERON:0002371">Bone Marrow</option>
+      <option value="brain-UBERON:0000955">Brain</option>
+      <option value="heart-UBERON:0000948">Heart</option>
+      <option value="kidney-UBERON:0002113">Kidney</option>
+      <option value="large intestine-UBERON:0000059">Large Intestine</option>
+      <option value="lymph node-UBERON:0000029">Lymph Node</option>
+      <option value="Respiratory System-UBERON:0001004">Respiratory System</option>
+      <option value="spleen-UBERON:0002106">Spleen</option>
+      <option value="skin-UBERON:0002097" selected="selected">Skin</option>
+      <option value="thoracic thymus-UBERON:0002370">Thoracic</option>
+      <option value="Trachea">Trachea</option>
+      <option value="vasculature-UBERON:0002049">Vasculature</option>
+    </select>
+    <div id="svgCirclesContainer" style="width: 1000px; height: 800px; margin:auto">
         <svg id="svgCircles" width="100%" height="100%"></svg>
     </div>
 
-    <div style="position: absolute; left:20px; bottom:40px;" id="paddingSliderContainer">
+    <div style="position: absolute; left:20px; top:40px;" id="paddingSliderContainer">
         Padding: <input style="background:grey;position: absolute; left:100px" type="range" min="0" max="100" value="10" class="slider" id="paddingSlider" onchange="doIt()">
     </div>
-    <div style="position: absolute; left:20px; bottom:80px;" id="curvatureSliderContainer">
+    <div style="position: absolute; left:20px; top:80px;" id="curvatureSliderContainer">
         Smoothness: <input style="background:grey;position: absolute; left:100px" type="range" min="1" max="100" value="10" class="slider" id="curvatureSlider" onchange="doIt()">
     </div>
 </body>
