@@ -9,34 +9,79 @@
     <script type='text/javascript' src="./build/d3-bubbletreemap.js"></script>
     <script>
         let working = false;
-
+        const rootTitle = 'skin-UBERON:0002097';
+        const LEAF_SIZE = 6;
+        const ARC_WIDTH = 3;
+        
         function doIt() {
-            if(!working) {
-                working = true;
+          d3.csv('./html/AS-CT-Tree-Combined.csv', (rootData) => {
+            if (!working) {
+              working = true;
 
-                let jsonData = undefined;
-                try {
-                    jsonData = JSON.parse(document.getElementById("jsonInputField").value);
-                } catch(e) {}
+              const jsonData = buildTree(rootData);
+              if (jsonData) {
+                let svg = d3.select("#svgCircles");
+                svg.selectAll("*").remove();
 
-                if (jsonData) {
-                    let svg = d3.select("#svgCircles");
-                    svg.selectAll("*").remove();
+                let padding = Number(document.getElementById("paddingSlider").value);
+                let curvature = Number(document.getElementById("curvatureSlider").value);
 
-                    let padding = Number(document.getElementById("paddingSlider").value);
-                    let curvature = Number(document.getElementById("curvatureSlider").value);
-
-                    drawChart(jsonData, svg, padding, (curvature === 100 ? 100000 : curvature));
-                }
-
-                working = false;
+                drawChart(jsonData, svg, padding, (curvature === 100 ? 100000 : curvature));
+              }
+              working = false;
             }
+          });
+        }
+
+        function buildTree(rootData) {
+          const treeMap = new Map();
+          const labels = new Set();
+          rootData.forEach(data => {
+            if (!data['FROM'] || !data['TO']) return;
+            labels.add(data['FROM'].trim());
+            labels.add(data['TO'].trim());
+          });
+          for (const label of labels) {
+            treeMap.set(label, {
+              name: label,
+              children: new Set(),
+              size: LEAF_SIZE,
+              uncertainty: ARC_WIDTH
+            });
+          }
+          for (const data of rootData) {
+            if (!data['FROM'] || !data['TO']) continue;
+            const from = data['FROM'].trim(), to = data['TO'].trim();
+            if (from === to) continue;
+            const fromData = treeMap.get(from);
+            const toData = treeMap.get(to)
+            if (!fromData.children.has(toData)) {
+              fromData.children.add(toData);
+            }
+          }
+          const root = treeMap.get(rootTitle);
+          countLeaves(root, new Set());
+          return root;
+        }
+
+        function countLeaves(node, leaves) {
+          if (node.children.size === 0) {
+            leaves.add(node);
+            return;
+          }
+          for (const child of node.children) {
+            const childLeaves = new Set();
+            countLeaves(child, childLeaves);
+            childLeaves.forEach(l => leaves.add(l));
+          }
+          node.children = Array.from(node.children);
+          node.size = leaves.size;
         }
 
         function drawChart(data, svg, padding, curvature) {
             // Create hierarchy.
             let root = d3.hierarchy(data)
-                .sum(function(d) { return d.size; })
+                .sum(function(d) { return d.size })
                 .sort(function(a, b) { return b.value - a.value; });
 
             let renderedSVGSize = svg.node().getBoundingClientRect();
@@ -86,7 +131,7 @@
     </script>
 </head>
 <body onload="doIt()" style="width:100%;height:99%;margin:0;padding:0;">
-    <div id="svgCirclesContainer" style="float:left; width: 50%; height: 100%;">
+    <div id="svgCirclesContainer" style="width: 50%; height: 100%;margin:auto">
         <svg id="svgCircles" width="100%" height="100%"></svg>
     </div>
 
@@ -95,120 +140,6 @@
     </div>
     <div style="position: absolute; left:20px; bottom:80px;" id="curvatureSliderContainer">
         Smoothness: <input style="background:grey;position: absolute; left:100px" type="range" min="1" max="100" value="10" class="slider" id="curvatureSlider" onchange="doIt()">
-    </div>
-
-    <div id="jsonInputFieldContainer" style="float:right; width: 50%; height: 100%;">
-        <textarea id="jsonInputField" type="text" style="float:right; width: 100%; height: 100%;" oninput="doIt()">
-{
-  "name": "Eve",
-  "uncertainty": 7,
-  "children": [
-    {
-      "name": "Cain",
-      "uncertainty": 10,
-      "size": 35
-    },
-    {
-      "name": "Seth",
-      "uncertainty": 5,
-      "children": [
-        {
-          "name": "Marc",
-          "size": 20,
-          "uncertainty": 2,
-          "children": [
-            {
-              "name": "A1",
-              "size": 10,
-              "uncertainty": 0
-            },
-            {
-              "name": "A2",
-              "size": 15,
-              "uncertainty": 5
-            },
-            {
-              "name": "A3",
-              "size": 20,
-              "uncertainty": 7
-            }
-          ]
-        },
-        {
-          "name": "Janine",
-          "size": 50,
-          "uncertainty": 4,
-          "children": [
-            {
-              "name": "B1",
-              "size": 12,
-              "uncertainty": 3
-            },
-            {
-              "name": "B2",
-              "size": 8,
-              "uncertainty": 3
-            },
-            {
-              "name": "B3",
-              "size": 15,
-              "uncertainty": 3
-            }
-          ]
-        },
-        {
-          "name": "Luke",
-          "size": 40,
-          "uncertainty": 2,
-          "children": [
-            {
-              "name": "C1",
-              "size": 3,
-              "uncertainty": 3
-            },
-            {
-              "name": "C2",
-              "size": 8,
-              "uncertainty": 3
-            },
-            {
-              "name": "C3",
-              "size": 5,
-              "uncertainty": 3
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Oli",
-      "uncertainty": 3,
-      "size": 30
-    },
-    {
-      "name": "Awan",
-      "uncertainty": 3,
-      "children": [
-        {
-          "name": "David",
-          "uncertainty": 5,
-          "size": 76
-        },
-        {
-          "name": "Peter",
-          "uncertainty": 3,
-          "size": 23
-        }
-      ]
-    },
-    {
-      "name": "Horst",
-      "uncertainty": 3,
-      "size": 80
-    }
-  ]
-}
-        </textarea>
     </div>
 </body>
 </html>
