@@ -202,14 +202,17 @@
         return centroid;
     }
 
-    function colorHierarchy(hierarchyRoot, colormap) {
-        let colorIndex = 0;
-        hierarchyRoot.children.forEach(function(child) {
-            child.descendants().forEach(function(desc){
-                desc.color = colormap[colorIndex % colormap.length];
-            });
-            colorIndex++;
+    function colorHierarchy(hierarchyRoot, colorMap) {
+        hierarchyRoot.leaves().forEach(function(leaf) {
+            if (leaf.data[0] && leaf.data[1][0]['CT/1'] && !colorMap.has(leaf.data[0])) {
+                colorMap.set(leaf.data[0], getRandomColor());
+            }
+            leaf.color = colorMap.get(leaf.data[0]);
         });
+    }
+
+    function getRandomColor() {
+        return `#${parseInt(Math.random() * (Math.pow(16, 6))).toString(16).padStart(6, '0')}`;
     }
 
     function Vec2(x, y) {
@@ -493,7 +496,7 @@
         let bubbletreemap,
             padding = 10,
             curvature = 10,
-            colormap = [],
+            colormap = new Map(),
             width = 800,
             height = 800,
             hierarchyRoot = [];

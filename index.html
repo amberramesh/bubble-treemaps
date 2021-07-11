@@ -2,94 +2,123 @@
 <html lang="en" style="width:100%;height:100%;margin:0;padding:0;">
 <head>
     <meta charset="UTF-8">
-    <title>Bubble Treemaps for Uncertainty Visualization - Jochen Görtler (@grtlr)</title>
+    <title>ASCT Bubble Treemaps</title>
     <script type='text/javascript' src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script type='text/javascript' src="https://d3js.org/d3.v4.js"></script>
-    <script type='text/javascript' src="https://cdn.jsdelivr.net/planck/0.1/planck.js"></script>
+    <script type='text/javascript' src="https://d3js.org/d3.v7.js"></script>
+    <script type='text/javascript' src="https://cdn.jsdelivr.net/npm/planck@latest/dist/planck-with-testbed.min.js"></script>
     <script type='text/javascript' src="./build/d3-bubbletreemap.js"></script>
     <script>
+        const childrenAccessorFn = ([, value]) => value instanceof Map && Array.from(value);
+        const dataAccessorFn = ({ data }) => (data[1] && data[1][0]) || {}
+        var ASCT_CSV_DATA_SOURCE = './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.csv';
+        var COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
+        var CIRCLE_RADIUS = 8;
+        var CONTOUR_WIDTH = 3;
+        var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
+        var TOOLTIP_PATH_START_LEVEL = 2;
+        var countCsvData = null;
+        var countMap = new Map();
+        var colorMap = new Map();
+
         let working = false;
-        var rootTitle = 'skin-UBERON:0002097';
-        const LEAF_SIZE = 6;
-        const ARC_WIDTH = 3;
-        
-        function doIt() {
-          d3.csv('./html/AS-CT-Tree-Combined.csv', (rootData) => {
+
+        async function doIt() {
+          await getCellCount();
+          d3.text(ASCT_CSV_DATA_SOURCE).then(rootData => {
+            const csvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
             if (!working) {
               working = true;
 
-              const jsonData = buildTree(rootData);
-              if (jsonData) {
+              const treeData = groupTreeData(csvData);
+              if (treeData) {
                 let svg = d3.select("#svgCircles");
                 svg.selectAll("*").remove();
 
                 let padding = Number(document.getElementById("paddingSlider").value);
                 let curvature = Number(document.getElementById("curvatureSlider").value);
 
-                drawChart(jsonData, svg, padding, (curvature === 100 ? 100000 : curvature));
+                drawChart(treeData, svg, padding, (curvature === 100 ? 100000 : curvature));
               }
               working = false;
             }
           });
         }
 
-        function buildTree(rootData) {
-          const treeMap = new Map();
-          const labels = new Set();
-          rootData.forEach(data => {
-            if (!data['FROM'] || !data['TO']) return;
-            labels.add(data['FROM'].trim());
-            labels.add(data['TO'].trim());
-          });
-          for (const label of labels) {
-            treeMap.set(label, {
-              name: label,
-              children: new Set(),
-              size: LEAF_SIZE,
-              uncertainty: ARC_WIDTH
-            });
-          }
-          for (const data of rootData) {
-            if (!data['FROM'] || !data['TO']) continue;
-            const from = data['FROM'].trim(), to = data['TO'].trim();
-            if (from === to) continue;
-            const fromData = treeMap.get(from);
-            const toData = treeMap.get(to)
-            if (!fromData.children.has(toData)) {
-              fromData.children.add(toData);
+        function compressPaths(nestedMap) {
+          for (const [key, value] of nestedMap.entries()) {
+            if (value instanceof Map) {
+              compressPaths(value);
+              if (key === '') {
+                let skipDelete = false;
+                for (const [nkey, nvalue] of value.entries()) {
+                  skipDelete |= nkey === key;
+                  nestedMap.set(nkey, nvalue);
+                }
+                !skipDelete && nestedMap.delete(key);
+              } else if (value.has('') && value.size === 1) {
+                nestedMap.set(key, value.get(''));
+              }
             }
           }
-          const root = treeMap.get(rootTitle);
-          countLeaves(root, new Set());
-          return root;
         }
 
-        function countLeaves(node, leaves) {
-          if (node.children.size === 0) {
-            leaves.add(node);
-            return;
-          }
-          for (const child of node.children) {
-            const childLeaves = new Set();
-            countLeaves(child, childLeaves);
-            childLeaves.forEach(l => leaves.add(l));
-          }
-          node.children = Array.from(node.children);
-          node.size = leaves.size;
+        async function getCellCount() {
+          return d3.text(COUNT_CSV_DATA_SOURCE)
+            .then(rootData => {
+              countCsvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
+              const groupedData = groupTreeData(countCsvData);
+              compressPaths(groupedData);
+              computeCellCount(groupedData);
+              // console.table(Array.from(countMap));
+            });
         }
 
-        function onSelect(selectEl) {
-          selectEl.disabled = true;
-          rootTitle = selectEl.value;
-          doIt();
-          selectEl.disabled = false;
+        function computeCellCount(nestedMap) {
+          let totalCount = 0;
+          if (nestedMap instanceof Array) {
+            return parseInt(nestedMap[0][countCsvData.columns.find(c => /^AS\/[0-9]+\/COUNT$/i.test(c))]);
+          }
+          for (const [key, value] of nestedMap.entries()) {
+            countMap.set(key, computeCellCount(value));
+            totalCount += countMap.get(key);
+          }
+          return totalCount;
+        }
+
+        function getCountMapKey(cellId) {
+          if (!cellId && cellId !== 0) return;
+          return Array.from(countMap.keys()).find(key => new RegExp(key, 'i').test(cellId));
+        }
+
+        function groupTreeData(csvData) {
+          const groupedData = d3.group(csvData, ...csvData.columns
+            .filter(c => /^(AS|CT)\/[0-9]+$/.test(c))
+            .sort((labelA, labelB) => { 
+              const [typeA, levelA] = labelA.split('/');
+              const [typeB, levelB] = labelB.split('/');
+              return typeA.localeCompare(typeB) || parseInt(levelA) - parseInt(levelB)
+            })
+            .map(c => (d) => d[c]));
+          compressPaths(groupedData);
+          return groupedData;
         }
 
         function drawChart(data, svg, padding, curvature) {
             // Create hierarchy.
-            let root = d3.hierarchy(data)
-                .sum(function(d) { return d.size })
-                .sort(function(a, b) { return b.value - a.value; });
+          let root = d3.hierarchy(Array.from(data)[0], childrenAccessorFn)
+            .sum(data => {
+              // Intermediate node check, return the set size
+              if (data.size) return data.size;
+              // Leaf node, check if count is available in the typology sheet
+              const leaf = dataAccessorFn({ data });
+              // TODO: Remove adhoc code that gets countMapKey based on CT/1 or CT/1/LABEL.
+              // This should always be fetched based on CT/1/ID.
+              const countMapKey = getCountMapKey(leaf['CT/1']) || getCountMapKey(leaf['CT/1/LABEL']);
+              return countMapKey ? CIRCLE_RADIUS * (Math.log(countMap.get(countMapKey)) / Math.log(LOG_SCALE_FACTOR)) : CIRCLE_RADIUS;
+            })
+            .sort((a, b) => b.value - a.value);
+
+            root.descendants().forEach(node => node.uncertainty = CONTOUR_WIDTH);
 
             let renderedSVGSize = svg.node().getBoundingClientRect();
 
@@ -98,16 +127,14 @@
                 .padding(padding)
                 .curvature(curvature)
                 .hierarchyRoot(root)
-                .width(renderedSVGSize.width)
+                .width(renderedSVGSize.width - 600)
                 .height(renderedSVGSize.height)
-                .colormap(["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f"]); // Color brewer: 12-class Paired
+                .colormap(colorMap);
 
             // Do layout and coloring.
             let hierarchyRoot = bubbletreemap.doLayout().doColoring().hierarchyRoot();
 
-            let leafNodes = hierarchyRoot.descendants().filter(function (candidate) {
-                return !candidate.children;
-            });
+            const leaves = root.leaves();
 
             // Draw contour.
             let contourGroup = svg.append("g")
@@ -126,41 +153,99 @@
                 .attr("class", "circlesAfterPlanck");
 
             circleGroup.selectAll("circle")
-                .data(leafNodes)
-                .enter().append("circle")
-                .attr("r", function(d) { return d.r; })
-                .attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; })
-                .style("fill", function(d) { return d.color; })
-                .style("stroke", "black")
-                .style("stroke-width", "2");
+              .data(leaves)
+              .enter().append("circle")
+              .classed('circle', true)
+              .attr("r", function(d) { return d.r })
+              .attr("cx", function(d) { return d.x; })
+              .attr("cy", function(d) { return d.y; })
+              .style("fill", function(d) { return dataAccessorFn(d)['CT/1'] ? d.color : '#222222' })
+              .style("stroke", "black")
+              .style("stroke-width", "2")
+              .append("title")
+              .text(function (d) {
+                const data = dataAccessorFn(d);
+                const countMapKey = getCountMapKey(data['CT/1']) || getCountMapKey(data['CT/1/LABEL']);
+                  return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(data)}`
+              });
+
+            svg.append("text")
+              .attr("transform", "translate(" + [renderedSVGSize.width/2, 100] + ")")
+              .attr("text-anchor", "middle")
+              .text("Spleen Partonomy")
+              .style('font-family', 'Cambria,Cochin,Georgia,Times,Times New Roman,serif')
+              .style('font-size', 84)
+              .style('font-weight', 800);
+
+            drawLegends(root, svg);
+        }
+
+        function getASPath(data) {
+          let level = TOOLTIP_PATH_START_LEVEL;
+          let path = '';
+          while (data['AS/' + level]) {
+            path += data['AS/' + level] + ' > '
+            level++;
+          }
+          return path.slice(0, -3);
+        }
+
+        function drawLegends(rootData, svg) {
+          var legendHeight = 20,
+            colorWidth = legendHeight * 3,
+            interLegend = 4,
+            legendNodes = Array.from(colorMap).sort(([key1], [key2])=> key2.localeCompare(key1));
+
+          var legendContainer = svg.append('g')
+            .classed('legend', true)
+            .attr('transform', 'translate(' + [1600, 1800] + ')')
+            .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
+            .style('stroke', 'gray')
+            .style('fill', 'gray');
+
+          var legends = legendContainer.selectAll('.legend')
+            .data(legendNodes)
+            .enter();
+
+          var legend = legends.append('g')
+            .classed('legend', true)
+            .attr('transform', function (d, i) {
+              return 'translate(' + [0, -i * (legendHeight + interLegend)] + ')';
+            })
+
+          legend.append('rect')
+            .classed('legend-color', true)
+            .attr('y', -legendHeight)
+            .attr('width', colorWidth)
+            .attr('height', legendHeight)
+            .style('fill', function (d) { return d[1] });
+
+          legend.append('text')
+            .classed('legend-text', true)
+            .attr('transform', 'translate(' + [colorWidth + 5, -4] + ')')
+            .text(function (d) { return d[0] });
+
+          legendContainer.append('text')
+            .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 5] + ')')
+            .text('Cell Types');
         }
     </script>
+    <style>
+      .circle:hover {
+        stroke: gray !important;
+        stroke-width: 3 !important;
+      }
+    </style>
 </head>
 <body onload="doIt()">
-    <select name="organs" onchange="onSelect(this)">
-      <option value="Blood-UBERON:0000178">Blood</option>
-      <option value="Bone marrow-UBERON:0002371">Bone Marrow</option>
-      <option value="brain-UBERON:0000955">Brain</option>
-      <option value="heart-UBERON:0000948">Heart</option>
-      <option value="kidney-UBERON:0002113">Kidney</option>
-      <option value="large intestine-UBERON:0000059">Large Intestine</option>
-      <option value="lymph node-UBERON:0000029">Lymph Node</option>
-      <option value="Respiratory System-UBERON:0001004">Respiratory System</option>
-      <option value="spleen-UBERON:0002106">Spleen</option>
-      <option value="skin-UBERON:0002097" selected="selected">Skin</option>
-      <option value="thoracic thymus-UBERON:0002370">Thoracic</option>
-      <option value="Trachea">Trachea</option>
-      <option value="vasculature-UBERON:0002049">Vasculature</option>
-    </select>
-    <div id="svgCirclesContainer" style="width: 1000px; height: 800px; margin:auto">
-        <svg id="svgCircles" width="100%" height="100%"></svg>
+    <div id="svgCirclesContainer">
+        <svg id="svgCircles" width="2000px" height="2000px"></svg>
     </div>
 
-    <div style="position: absolute; left:20px; top:40px;" id="paddingSliderContainer">
+    <div style="position: absolute; left:20px; bottom:40px;display:none" id="paddingSliderContainer">
         Padding: <input style="background:grey;position: absolute; left:100px" type="range" min="0" max="100" value="10" class="slider" id="paddingSlider" onchange="doIt()">
     </div>
-    <div style="position: absolute; left:20px; top:80px;" id="curvatureSliderContainer">
+    <div style="position: absolute; left:20px; bottom:80px;display:none" id="curvatureSliderContainer">
         Smoothness: <input style="background:grey;position: absolute; left:100px" type="range" min="1" max="100" value="10" class="slider" id="curvatureSlider" onchange="doIt()">
     </div>
 </body>
