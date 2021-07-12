@@ -10,12 +10,14 @@
     <script>
         const childrenAccessorFn = ([, value]) => value instanceof Map && Array.from(value);
         const dataAccessorFn = ({ data }) => (data[1] && data[1][0]) || {}
+        const titleAccessorFn = ({ data }) => data[0] || ''
         var ASCT_CSV_DATA_SOURCE = './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.csv';
         var COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
         var CIRCLE_RADIUS = 8;
         var CONTOUR_WIDTH = 3;
         var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
         var TOOLTIP_PATH_START_LEVEL = 2;
+        var TOP_N_LEAVES = 10;
         var countCsvData = null;
         var countMap = new Map();
         var colorMap = new Map();
@@ -44,10 +46,10 @@
           });
         }
 
-        function compressPaths(nestedMap) {
+        function compressTree(nestedMap) {
           for (const [key, value] of nestedMap.entries()) {
             if (value instanceof Map) {
-              compressPaths(value);
+              compressTree(value);
               if (key === '') {
                 let skipDelete = false;
                 for (const [nkey, nvalue] of value.entries()) {
@@ -67,7 +69,6 @@
             .then(rootData => {
               countCsvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
               const groupedData = groupTreeData(countCsvData);
-              compressPaths(groupedData);
               computeCellCount(groupedData);
               // console.table(Array.from(countMap));
             });
@@ -99,8 +100,21 @@
               return typeA.localeCompare(typeB) || parseInt(levelA) - parseInt(levelB)
             })
             .map(c => (d) => d[c]));
-          compressPaths(groupedData);
+          compressTree(groupedData);
           return groupedData;
+        }
+
+        function computeTopNLeaves(leaves, n) {
+          const labels = new Set();
+          const sortedLeaves = leaves.filter(d => d.value > CIRCLE_RADIUS).sort((a, b) => b.value - a.value);
+
+          const topNLeaves = [];
+          for (const leaf of sortedLeaves) {
+            if (labels.size === n) break;
+            labels.add(titleAccessorFn(leaf));
+            topNLeaves.push(leaf);
+          }
+          return topNLeaves;
         }
 
         function drawChart(data, svg, padding, curvature) {
@@ -118,66 +132,87 @@
             })
             .sort((a, b) => b.value - a.value);
 
-            root.descendants().forEach(node => node.uncertainty = CONTOUR_WIDTH);
+          root.descendants().forEach(node => node.uncertainty = CONTOUR_WIDTH);
 
-            let renderedSVGSize = svg.node().getBoundingClientRect();
+          let renderedSVGSize = svg.node().getBoundingClientRect();
 
-            // Create bubbletreemap.
-            let bubbletreemap = d3.bubbletreemap()
-                .padding(padding)
-                .curvature(curvature)
-                .hierarchyRoot(root)
-                .width(renderedSVGSize.width - 600)
-                .height(renderedSVGSize.height)
-                .colormap(colorMap);
+          // Create bubbletreemap.
+          let bubbletreemap = d3.bubbletreemap()
+              .padding(padding)
+              .curvature(curvature)
+              .hierarchyRoot(root)
+              .width(renderedSVGSize.width - 600)
+              .height(renderedSVGSize.height)
+              .colormap(colorMap);
 
-            // Do layout and coloring.
-            let hierarchyRoot = bubbletreemap.doLayout().doColoring().hierarchyRoot();
+          // Do layout and coloring.
+          let hierarchyRoot = bubbletreemap.doLayout().doColoring().hierarchyRoot();
 
-            const leaves = root.leaves();
+          const leaves = root.leaves();
 
-            // Draw contour.
-            let contourGroup = svg.append("g")
-                .attr("class", "contour");
+          // Draw contour.
+          let contourGroup = svg.append("g")
+            .attr("class", "contour");
 
-            contourGroup.selectAll("path")
-                .data(bubbletreemap.getContour())
-                .enter().append("path")
-                .attr("d", function(arc) { return arc.d; })
-                .style("stroke", "black")
-                .style("stroke-width", function(arc) { return arc.strokeWidth; })
-                .attr("transform", function(arc) {return arc.transform;});
-
-            // Draw circles.
-            let circleGroup = svg.append("g")
-                .attr("class", "circlesAfterPlanck");
-
-            circleGroup.selectAll("circle")
-              .data(leaves)
-              .enter().append("circle")
-              .classed('circle', true)
-              .attr("r", function(d) { return d.r })
-              .attr("cx", function(d) { return d.x; })
-              .attr("cy", function(d) { return d.y; })
-              .style("fill", function(d) { return dataAccessorFn(d)['CT/1'] ? d.color : '#222222' })
+          contourGroup.selectAll("path")
+            .data(bubbletreemap.getContour())
+            .enter()
+              .append("path")
+              .attr("d", function(arc) { return arc.d; })
               .style("stroke", "black")
-              .style("stroke-width", "2")
-              .append("title")
-              .text(function (d) {
-                const data = dataAccessorFn(d);
-                const countMapKey = getCountMapKey(data['CT/1']) || getCountMapKey(data['CT/1/LABEL']);
-                  return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(data)}`
-              });
+              .style("stroke-width", function(arc) { return arc.strokeWidth; })
+              .attr("transform", function(arc) {return arc.transform;});
 
-            svg.append("text")
-              .attr("transform", "translate(" + [renderedSVGSize.width/2, 100] + ")")
-              .attr("text-anchor", "middle")
-              .text("Spleen Partonomy")
-              .style('font-family', 'Cambria,Cochin,Georgia,Times,Times New Roman,serif')
-              .style('font-size', 84)
-              .style('font-weight', 800);
+          // Draw circles.
+          let circleGroup = svg.append("g")
+              .attr("class", "circlesAfterPlanck")
+              .selectAll("circle")
+              .data(leaves)
+              .enter()
+                .append("circle")
+                .classed('circle', true)
+                .attr("r", function(d) { return d.r })
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; })
+                .style("fill", function(d) { return dataAccessorFn(d)['CT/1'] ? d.color : '#222222' })
+                .style("stroke", "black")
+                .style("stroke-width", "2");
+            
+          // Add Hover Text
+          circleGroup.append("title")
+            .text(function (d) {
+              const data = dataAccessorFn(d);
+              const countMapKey = getCountMapKey(data['CT/1']) || getCountMapKey(data['CT/1/LABEL']);
+                return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(data)}`
+            });
 
-            drawLegends(root, svg);
+          // Add Top-N Labels
+          const topNLeaves = computeTopNLeaves(leaves, TOP_N_LEAVES);
+          svg.append('g')
+            .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
+            .style('text-anchor', 'middle')
+            .style('fill', 'white')
+            .style('text-shadow', '-1px -1px 0 #888, 1px -1px 0 #888, -1px 1px 0 #888, 1px 1px 0 #888')
+            .selectAll(".label")
+            .data(topNLeaves)
+            .enter()
+              .append("text")
+              .classed("label", true)
+              .text((d) => titleAccessorFn(d))
+              .attr("transform", function (d) {
+                return "translate(" + [d.x, d.y] + ")";
+              })
+            
+          // Add Title Text
+          svg.append("text")
+            .attr("transform", "translate(" + [renderedSVGSize.width / 2, 100] + ")")
+            .attr("text-anchor", "middle")
+            .text("Spleen Partonomy")
+            .style('font-family', 'Cambria,Cochin,Georgia,Times,Times New Roman,serif')
+            .style('font-size', 84)
+            .style('font-weight', 800);
+
+          drawLegends(root, svg);
         }
 
         function getASPath(data) {
@@ -227,6 +262,7 @@
 
           legendContainer.append('text')
             .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 5] + ')')
+            .style('font-size', '1.2em')
             .text('Cell Types');
         }
     </script>
