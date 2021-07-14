@@ -10,13 +10,14 @@
     <script>
         const childrenAccessorFn = ([, value]) => value instanceof Map && Array.from(value);
         const dataAccessorFn = ({ data }) => (data[1] && data[1][0]) || {}
-        const titleAccessorFn = ({ data }) => data[0] || ''
+        const titleAccessorFn = ({ data }) => data[0] ?? ''
         var ASCT_CSV_DATA_SOURCE = './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.csv';
         var COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
+        var AS_ROOT_TITLE = 'Spleen';
         var CIRCLE_RADIUS = 8;
         var CONTOUR_WIDTH = 3;
         var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
-        var TOOLTIP_PATH_START_LEVEL = 2;
+        var TOOLTIP_PATH_START_LEVEL = 0; // 0-indexed
         var TOP_N_LEAVES = 10;
         var countCsvData = null;
         var countMap = new Map();
@@ -127,12 +128,12 @@
               const leaf = dataAccessorFn({ data });
               // TODO: Remove adhoc code that gets countMapKey based on CT/1 or CT/1/LABEL.
               // This should always be fetched based on CT/1/ID.
-              const countMapKey = getCountMapKey(leaf['CT/1']) || getCountMapKey(leaf['CT/1/LABEL']);
+              const countMapKey = getCountMapKey(leaf['CT/1']) ?? getCountMapKey(leaf['CT/1/LABEL']);
               return countMapKey ? CIRCLE_RADIUS * (Math.log(countMap.get(countMapKey)) / Math.log(LOG_SCALE_FACTOR)) : CIRCLE_RADIUS;
             })
             .sort((a, b) => b.value - a.value);
 
-          root.descendants().forEach(node => node.uncertainty = CONTOUR_WIDTH);
+          root.descendants().forEach(node => node.uncertainty = node.height * 2 + 1);
 
           let renderedSVGSize = svg.node().getBoundingClientRect();
 
@@ -152,16 +153,22 @@
 
           // Draw contour.
           let contourGroup = svg.append("g")
-            .attr("class", "contour");
-
-          contourGroup.selectAll("path")
+            .attr("class", "contour")
+            .selectAll("path")
             .data(bubbletreemap.getContour())
             .enter()
               .append("path")
               .attr("d", function(arc) { return arc.d; })
-              .style("stroke", "black")
+              .style("stroke", function(arc) { return arc.stroke; })
               .style("stroke-width", function(arc) { return arc.strokeWidth; })
-              .attr("transform", function(arc) {return arc.transform;});
+              .attr("transform", function(arc) { return arc.transform; });
+
+          contourGroup.append("title")
+            .text(function (arc) {
+              const asPath = getASPath(arc.parent);
+              const title = titleAccessorFn(arc.parent);
+              return title + (asPath ? `\n\nAS Tree: ${asPath}` : '')
+            });
 
           // Draw circles.
           let circleGroup = svg.append("g")
@@ -183,7 +190,7 @@
             .text(function (d) {
               const data = dataAccessorFn(d);
               const countMapKey = getCountMapKey(data['CT/1']) || getCountMapKey(data['CT/1/LABEL']);
-                return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(data)}`
+                return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(d)}`
             });
 
           // Add Top-N Labels
@@ -207,7 +214,7 @@
           svg.append("text")
             .attr("transform", "translate(" + [renderedSVGSize.width / 2, 100] + ")")
             .attr("text-anchor", "middle")
-            .text("Spleen Partonomy")
+            .text(`${AS_ROOT_TITLE} Partonomy`)
             .style('font-family', 'Cambria,Cochin,Georgia,Times,Times New Roman,serif')
             .style('font-size', 84)
             .style('font-weight', 800);
@@ -215,14 +222,16 @@
           drawLegends(root, svg);
         }
 
-        function getASPath(data) {
-          let level = TOOLTIP_PATH_START_LEVEL;
-          let path = '';
-          while (data['AS/' + level]) {
-            path += data['AS/' + level] + ' > '
-            level++;
-          }
-          return path.slice(0, -3);
+        function getASPath(node) {
+          const pathList = getPathList(node);
+          return pathList.splice(TOOLTIP_PATH_START_LEVEL).join(' > ')
+        }
+
+        function getPathList(node) {
+          if (!node.parent) return [titleAccessorFn(node)];
+          const pathList = getPathList(node.parent);
+          pathList.push(titleAccessorFn(node));
+          return pathList;
         }
 
         function drawLegends(rootData, svg) {
