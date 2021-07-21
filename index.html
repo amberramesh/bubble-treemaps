@@ -11,6 +11,11 @@
         const childrenAccessorFn = ([, value]) => value instanceof Map && Array.from(value);
         const dataAccessorFn = ({ data }) => (data[1] && data[1][0]) || {}
         const titleAccessorFn = ({ data }) => data[0] ?? ''
+        const LabelingMethod = {
+          TopLeaves: 0,
+          TopASNodes: 1
+        }
+
         var ASCT_CSV_DATA_SOURCE = './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.csv';
         var COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
         var AS_ROOT_TITLE = 'Spleen';
@@ -19,13 +24,19 @@
         var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
         var TOOLTIP_PATH_START_LEVEL = 0; // 0-indexed
         var TOP_N_LEAVES = 10;
+        var TOP_AS_MIN_CHILDREN = 5;
+        var SELECTED_LABELING_METHOD = LabelingMethod.TopLeaves;
         var countCsvData = null;
         var countMap = new Map();
         var colorMap = new Map();
+        var topNLabels, topNLeaves, topNLeafParents, topNLabelsNode;
 
         let working = false;
 
-        async function doIt() {
+        async function generateTreemap() {
+          document.getElementById('busyText').style.display = 'inline';
+          countMap.clear();
+          colorMap.clear();
           await getCellCount();
           d3.text(ASCT_CSV_DATA_SOURCE).then(rootData => {
             const csvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
@@ -43,6 +54,7 @@
                 drawChart(treeData, svg, padding, (curvature === 100 ? 100000 : curvature));
               }
               working = false;
+              document.getElementById('busyText').style.display = 'none';
             }
           });
         }
@@ -66,6 +78,7 @@
         }
 
         async function getCellCount() {
+          if (!COUNT_CSV_DATA_SOURCE) return Promise.resolve();
           return d3.text(COUNT_CSV_DATA_SOURCE)
             .then(rootData => {
               countCsvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
@@ -78,6 +91,7 @@
         function computeCellCount(nestedMap) {
           let totalCount = 0;
           if (nestedMap instanceof Array) {
+            if (!nestedMap[0]) return;
             return parseInt(nestedMap[0][countCsvData.columns.find(c => /^AS\/[0-9]+\/COUNT$/i.test(c))]);
           }
           for (const [key, value] of nestedMap.entries()) {
@@ -123,7 +137,7 @@
           let root = d3.hierarchy(Array.from(data)[0], childrenAccessorFn)
             .sum(data => {
               // Intermediate node check, return the set size
-              if (data.size) return data.size;
+              if (data.size) return 0;
               // Leaf node, check if count is available in the typology sheet
               const leaf = dataAccessorFn({ data });
               // TODO: Remove adhoc code that gets countMapKey based on CT/1 or CT/1/LABEL.
@@ -150,6 +164,17 @@
           let hierarchyRoot = bubbletreemap.doLayout().doColoring().hierarchyRoot();
 
           const leaves = root.leaves();
+          const leafParentsCandidates = new Set(leaves.map(leaf => leaf.parent));
+          const leafParents = [];
+          for (let node of leafParentsCandidates.keys()) {
+            // Skip parent if their child is already a candidate
+            if (node.children.some(c => leafParentsCandidates.has(c))) continue;
+            leafParents.push(node);
+          }
+          leafParents.sort((a, b) => b.depth - a.depth)
+            .forEach((d) =>
+              Object.assign(d, getCircleCentroid(d.children))
+            );
 
           // Draw contour.
           let contourGroup = svg.append("g")
@@ -172,7 +197,7 @@
 
           // Draw circles.
           let circleGroup = svg.append("g")
-              .attr("class", "circlesAfterPlanck")
+              .attr("class", "circles")
               .selectAll("circle")
               .data(leaves)
               .enter()
@@ -194,14 +219,23 @@
             });
 
           // Add Top-N Labels
-          const topNLeaves = computeTopNLeaves(leaves, TOP_N_LEAVES);
-          svg.append('g')
+          topNLeaves = computeTopNLeaves(leaves, TOP_N_LEAVES);
+          topNLeafParents = leafParents.filter(p => p.children.length >= TOP_AS_MIN_CHILDREN);
+          switch (SELECTED_LABELING_METHOD) {
+            case LabelingMethod.TopLeaves:
+              topNLabels = topNLeaves;
+              break;
+            case LabelingMethod.TopASNodes:
+              topNLabels = topNLeafParents;
+              break;
+          }
+          topNLabelsNode = svg.append('g')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('text-anchor', 'middle')
             .style('fill', 'white')
             .style('text-shadow', '-1px -1px 0 #888, 1px -1px 0 #888, -1px 1px 0 #888, 1px 1px 0 #888')
             .selectAll(".label")
-            .data(topNLeaves)
+            .data(topNLabels)
             .enter()
               .append("text")
               .classed("label", true)
@@ -222,6 +256,23 @@
           drawLegends(root, svg);
         }
 
+        function getCircleCentroid(circles) {
+          // Calculate centroid of circle group.
+          let circleMassSum = 0;
+          let centroid = planck.Vec2.zero();
+
+          circles.forEach(function (circle) {
+            let circleMass = circle.r * circle.r * Math.PI;
+            circleMassSum += circleMass;
+            centroid.x += circle.x * circleMass;
+            centroid.y += circle.y * circleMass;
+          });
+
+          centroid.mul(1.0 / circleMassSum);
+
+          return centroid;
+        }
+
         function getASPath(node) {
           const pathList = getPathList(node);
           return pathList.splice(TOOLTIP_PATH_START_LEVEL).join(' > ')
@@ -232,6 +283,35 @@
           const pathList = getPathList(node.parent);
           pathList.push(titleAccessorFn(node));
           return pathList;
+        }
+
+        function changeLabelingMethod(methodType) {
+          SELECTED_LABELING_METHOD = methodType;
+          switch(methodType) {
+            case LabelingMethod.TopLeaves:
+              topNLabelsNode.remove();
+              topNLabels = topNLeaves;
+              break;
+            case LabelingMethod.TopASNodes:
+              topNLabelsNode.remove();
+              topNLabels = topNLeafParents;
+              break;
+          }
+          let svg = d3.select("#svgCircles");
+          topNLabelsNode = svg.append('g')
+            .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
+            .style('text-anchor', 'middle')
+            .style('fill', 'white')
+            .style('text-shadow', '-1px -1px 0 #888, 1px -1px 0 #888, -1px 1px 0 #888, 1px 1px 0 #888')
+            .selectAll(".label")
+            .data(topNLabels)
+            .enter()
+            .append("text")
+            .classed("label", true)
+            .text((d) => titleAccessorFn(d))
+            .attr("transform", function (d) {
+              return "translate(" + [d.x, d.y] + ")";
+            })
         }
 
         function drawLegends(rootData, svg) {
@@ -274,6 +354,54 @@
             .style('font-size', '1.2em')
             .text('Cell Types');
         }
+        
+        function updateOrganSelection(selectEl) {
+          ASCT_CSV_DATA_SOURCE = `./html/ASCT+B_Tables_Standard_Format_3-24-2021_-_${selectEl.value}.csv`;
+          switch (selectEl.value) {
+            case 'Brain_v1':
+              AS_ROOT_TITLE = 'Brain';
+              COUNT_CSV_DATA_SOURCE = './html/motor_cortex.csv';
+              break;
+            case 'Heart_v1':
+              AS_ROOT_TITLE = 'Heart';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Kidney_v1':
+              AS_ROOT_TITLE = 'Kidney';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Large_Intestine_v1':
+              AS_ROOT_TITLE = 'Large Intestine';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Lymph_Node_v1':
+              AS_ROOT_TITLE = 'Lymph Node';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Lung_v1':
+              AS_ROOT_TITLE = 'Lung';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Spleen_v1':
+              AS_ROOT_TITLE = 'Spleen';
+              COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
+            break;
+            case 'Skin_v1':
+              AS_ROOT_TITLE = 'Skin';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Thymus_v1':
+              AS_ROOT_TITLE = 'Thymus';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            case 'Vasculature_v1':
+              AS_ROOT_TITLE = 'Vasculature';
+              COUNT_CSV_DATA_SOURCE = null;
+              break;
+            default:
+            COUNT_CSV_DATA_SOURCE = null;
+          }
+        }
     </script>
     <style>
       .circle:hover {
@@ -282,16 +410,35 @@
       }
     </style>
 </head>
-<body onload="doIt()">
+<body onload="generateTreemap()">
+    <select name="organs" onchange="updateOrganSelection(this)">
+      <option value="Brain_v1">Brain</option>
+      <option value="Heart_v1" disabled title="This dataset is too large.">Heart</option>
+      <option value="Kidney_v1">Kidney</option>
+      <option value="Large_Intestine_v1">Large Intestine</option>
+      <option value="Lymph_Node_v1">Lymph Node</option>
+      <option value="Lung_v1" disabled title="This dataset is too large.">Respiratory System</option>
+      <option value="Spleen_v1" selected="selected">Spleen</option>
+      <option value="Skin_v1">Skin</option>
+      <option value="Thymus_v1">Thymus</option>
+      <option value="Vasculature_v1">Vasculature</option>
+    </select>
+    <button onclick="generateTreemap()">Generate SVG</button>
+    <small style="color: gray; display: none" id="busyText">Generating treemap, please wait...</small>
+    <br /><br />
+    <input type="radio" name="topLabels" id="topLeavesOpt" onchange="changeLabelingMethod(0)" checked>
+    <label for="topLeavesOpt">Top 10 Leaves</label>
+    <input type="radio" name="topLabels" id="topASNodesOpt" onchange="changeLabelingMethod(1)">
+    <label for="topLeavesOpt">Top AS Nodes</label>
     <div id="svgCirclesContainer">
         <svg id="svgCircles" width="2000px" height="2000px"></svg>
     </div>
 
     <div style="position: absolute; left:20px; bottom:40px;display:none" id="paddingSliderContainer">
-        Padding: <input style="background:grey;position: absolute; left:100px" type="range" min="0" max="100" value="10" class="slider" id="paddingSlider" onchange="doIt()">
+        Padding: <input style="background:grey;position: absolute; left:100px" type="range" min="0" max="100" value="10" class="slider" id="paddingSlider" onchange="generateTreemap()">
     </div>
     <div style="position: absolute; left:20px; bottom:80px;display:none" id="curvatureSliderContainer">
-        Smoothness: <input style="background:grey;position: absolute; left:100px" type="range" min="1" max="100" value="10" class="slider" id="curvatureSlider" onchange="doIt()">
+        Smoothness: <input style="background:grey;position: absolute; left:100px" type="range" min="1" max="100" value="10" class="slider" id="curvatureSlider" onchange="generateTreemap()">
     </div>
 </body>
 </html>
