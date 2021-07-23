@@ -13,12 +13,31 @@
         const titleAccessorFn = ({ data }) => data[0] ?? ''
         const LabelingMethod = {
           TopLeaves: 0,
-          TopASNodes: 1
+          TopASNodes: 1,
+          FTUNodes: 2
         }
+        const CellSuperType = {
+          Vasculature: 1,
+          Lymph: 2,
+          Nerve: 3,
+          Others: 4,
+          Immune: 5,
+          Connective: 6,
+          Muscle: 7
+        };
+        const CellSuperTypeLabel = {
+          [CellSuperType.Vasculature]: 'Vasculature',
+          [CellSuperType.Lymph]: 'Lymph',
+          [CellSuperType.Nerve]: 'Nerve',
+          [CellSuperType.Others]: 'Others',
+          [CellSuperType.Immune]: 'Immune',
+          [CellSuperType.Connective]: 'Connective',
+          [CellSuperType.Muscle]: 'Muscle',
+        };
 
-        var ASCT_CSV_DATA_SOURCE = './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.csv';
-        var COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
-        var AS_ROOT_TITLE = 'Spleen';
+        var ASCT_CSV_DATA_SOURCE = null;
+        var COUNT_CSV_DATA_SOURCE = null;
+        var AS_ROOT_TITLE = null;
         var CIRCLE_RADIUS = 8;
         var CONTOUR_WIDTH = 3;
         var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
@@ -29,14 +48,14 @@
         var countCsvData = null;
         var countMap = new Map();
         var colorMap = new Map();
-        var topNLabels, topNLeaves, topNLeafParents, topNLabelsNode;
+        var renderedSVGSize;
+        var topNLabels, topNLeaves, topNLeafParents, topNLabelsNode, ftuNodes;
 
         let working = false;
 
         async function generateTreemap() {
           document.getElementById('busyText').style.display = 'inline';
           countMap.clear();
-          colorMap.clear();
           await getCellCount();
           d3.text(ASCT_CSV_DATA_SOURCE).then(rootData => {
             const csvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
@@ -149,14 +168,14 @@
 
           root.descendants().forEach(node => node.uncertainty = node.height * 2 + 1);
 
-          let renderedSVGSize = svg.node().getBoundingClientRect();
+          renderedSVGSize = svg.node().getBoundingClientRect();
 
           // Create bubbletreemap.
           let bubbletreemap = d3.bubbletreemap()
               .padding(padding)
               .curvature(curvature)
               .hierarchyRoot(root)
-              .width(renderedSVGSize.width - 600)
+              .width(renderedSVGSize.width - 400)
               .height(renderedSVGSize.height)
               .colormap(colorMap);
 
@@ -171,7 +190,8 @@
             if (node.children.some(c => leafParentsCandidates.has(c))) continue;
             leafParents.push(node);
           }
-          leafParents.sort((a, b) => b.depth - a.depth)
+          ftuNodes = Array.from(new Set(leaves.filter(d => dataAccessorFn(d)['FTU']).map(d => d.parent)));
+          [...leafParents, ...ftuNodes].sort((a, b) => b.depth - a.depth)
             .forEach((d) =>
               Object.assign(d, getCircleCentroid(d.children))
             );
@@ -227,6 +247,9 @@
               break;
             case LabelingMethod.TopASNodes:
               topNLabels = topNLeafParents;
+              break;
+            case LabelingMethod.FTUNodes:
+              topNLabels = ftuNodes;
               break;
           }
           topNLabelsNode = svg.append('g')
@@ -296,6 +319,10 @@
               topNLabelsNode.remove();
               topNLabels = topNLeafParents;
               break;
+            case LabelingMethod.FTUNodes:
+              topNLabelsNode.remove();
+              topNLabels = ftuNodes;
+              break;
           }
           let svg = d3.select("#svgCircles");
           topNLabelsNode = svg.append('g')
@@ -318,11 +345,13 @@
           var legendHeight = 20,
             colorWidth = legendHeight * 3,
             interLegend = 4,
-            legendNodes = Array.from(colorMap).sort(([key1], [key2])=> key2.localeCompare(key1));
+            legendNodes = Array.from(colorMap).sort(([key1], [key2]) => key2.toString().localeCompare(key1.toString()));
 
+          const legendXOffset = 1600;
+          const legendYOffset = (renderedSVGSize.height + legendNodes.length * 24) / 2;
           var legendContainer = svg.append('g')
             .classed('legend', true)
-            .attr('transform', 'translate(' + [1600, 1800] + ')')
+            .attr('transform', 'translate(' + [legendXOffset, legendYOffset] + ')')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('stroke', 'gray')
             .style('fill', 'gray');
@@ -347,7 +376,7 @@
           legend.append('text')
             .classed('legend-text', true)
             .attr('transform', 'translate(' + [colorWidth + 5, -4] + ')')
-            .text(function (d) { return d[0] });
+            .text(function (d) { return CellSuperTypeLabel[d[0]] ?? d[0] });
 
           legendContainer.append('text')
             .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 5] + ')')
@@ -361,45 +390,64 @@
             case 'Brain_v1':
               AS_ROOT_TITLE = 'Brain';
               COUNT_CSV_DATA_SOURCE = './html/motor_cortex.csv';
+              colorMap.clear();
               break;
             case 'Heart_v1':
               AS_ROOT_TITLE = 'Heart';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Kidney_v1':
               AS_ROOT_TITLE = 'Kidney';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Large_Intestine_v1':
               AS_ROOT_TITLE = 'Large Intestine';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Lymph_Node_v1':
               AS_ROOT_TITLE = 'Lymph Node';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Lung_v1':
               AS_ROOT_TITLE = 'Lung';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
-            case 'Spleen_v1':
+            case 'Spleen_v1.6':
               AS_ROOT_TITLE = 'Spleen';
               COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
+              colorMap = new Map([
+                [CellSuperType.Vasculature.toString(), 'red'],
+                [CellSuperType.Lymph.toString(), 'purple'],
+                [CellSuperType.Nerve.toString(), 'green'],
+                [CellSuperType.Others.toString(), 'orange'],
+                [CellSuperType.Immune.toString(), 'yellow'],
+                [CellSuperType.Connective.toString(), 'blue'],
+                [CellSuperType.Muscle.toString(), 'gray'],
+              ]);
             break;
             case 'Skin_v1':
               AS_ROOT_TITLE = 'Skin';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Thymus_v1':
               AS_ROOT_TITLE = 'Thymus';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             case 'Vasculature_v1':
               AS_ROOT_TITLE = 'Vasculature';
               COUNT_CSV_DATA_SOURCE = null;
+              colorMap.clear();
               break;
             default:
             COUNT_CSV_DATA_SOURCE = null;
+            colorMap.clear();
           }
         }
     </script>
@@ -410,7 +458,7 @@
       }
     </style>
 </head>
-<body onload="generateTreemap()">
+<body onload="updateOrganSelection({ value: 'Spleen_v1.6' });generateTreemap()">
     <select name="organs" onchange="updateOrganSelection(this)">
       <option value="Brain_v1">Brain</option>
       <option value="Heart_v1" disabled title="This dataset is too large.">Heart</option>
@@ -418,7 +466,7 @@
       <option value="Large_Intestine_v1">Large Intestine</option>
       <option value="Lymph_Node_v1">Lymph Node</option>
       <option value="Lung_v1" disabled title="This dataset is too large.">Respiratory System</option>
-      <option value="Spleen_v1" selected="selected">Spleen</option>
+      <option value="Spleen_v1.6" selected="selected">Spleen</option>
       <option value="Skin_v1">Skin</option>
       <option value="Thymus_v1">Thymus</option>
       <option value="Vasculature_v1">Vasculature</option>
@@ -426,12 +474,14 @@
     <button onclick="generateTreemap()">Generate SVG</button>
     <small style="color: gray; display: none" id="busyText">Generating treemap, please wait...</small>
     <br /><br />
-    <input type="radio" name="topLabels" id="topLeavesOpt" onchange="changeLabelingMethod(0)" checked>
+    <input type="radio" name="nodeLabels" id="topLeavesOpt" onchange="changeLabelingMethod(0)" checked>
     <label for="topLeavesOpt">Top 10 Leaves</label>
-    <input type="radio" name="topLabels" id="topASNodesOpt" onchange="changeLabelingMethod(1)">
+    <input type="radio" name="nodeLabels" id="topASNodesOpt" onchange="changeLabelingMethod(1)">
     <label for="topLeavesOpt">Top AS Nodes</label>
+    <input type="radio" name="nodeLabels" id="ftuNodesOpt" onchange="changeLabelingMethod(2)">
+    <label for="ftuNodesOpt">FTU Nodes</label>
     <div id="svgCirclesContainer">
-        <svg id="svgCircles" width="2000px" height="2000px"></svg>
+        <svg id="svgCircles" width="2000px" height="1700px"></svg>
     </div>
 
     <div style="position: absolute; left:20px; bottom:40px;display:none" id="paddingSliderContainer">

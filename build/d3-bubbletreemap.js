@@ -204,10 +204,13 @@
 
     function colorHierarchy(hierarchyRoot, colorMap) {
         hierarchyRoot.leaves().forEach(function(leaf) {
-            if (leaf.data[0] && leaf.data[1][0]['CT/1'] && !colorMap.has(leaf.data[0])) {
-                colorMap.set(leaf.data[0], getRandomColor());
+            // Use super type if available, else use the actual cell type
+            const cellType = (leaf.data[1][0]['CT/1/SUPERTYPE']) ||
+            (leaf.data[1][0]['CT/1'] && leaf.data[0]);
+            if (cellType && !colorMap.has(cellType)) {
+                colorMap.set(cellType, getRandomColor());
             }
-            leaf.color = colorMap.get(leaf.data[0]);
+            leaf.color = colorMap.get(cellType);
         });
     }
 
