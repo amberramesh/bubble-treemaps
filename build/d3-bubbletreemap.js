@@ -7,20 +7,20 @@
     function getLayerClusters(hierarchyRoot, layerDepth, padding) {
         var clusters = [];
 
+        // Starting with the root - we filter nodes from each level
+        // If the root has 3 children,
+        // layerNodes now has those 3 nodes
         let layerNodes = hierarchyRoot.descendants().filter(function(candidate) {
             return candidate.depth === layerDepth;
         });
 
-        layerNodes.forEach(function(node) {
-            let clusterNodes = node.descendants().filter(function(candidate){
+        layerNodes.forEach(function(clusterParent) {
+            let clusterNodes = clusterParent.descendants().filter(function(candidate){
                 return !candidate.children;
             });
 
-            let clusterParent = node.ancestors().filter(function(ancestor) {
-                return ancestor.depth === layerDepth;
-            })[0];
-
             clusterNodes.forEach(function(node) {
+                // The path excluding the cluster parent and the cluster node
                 let path = node.path(clusterParent).slice(1,-1);
 
                 let uncertaintySum = path.reduce(function(acc, pathnode){
@@ -30,7 +30,7 @@
                 let contourClusterParentUncertainty = clusterParent.uncertainty/2;                                // Padding for contour (contour lies 50% outside of parent node).
                 let planckClusterParentUncertainty = node !== clusterParent ? clusterParent.uncertainty : 0;      // Padding for force based layout (contours should not cut each other, i.e. full parent contour should be taken into account).
 
-                let interClusterSpacing = clusterNodes.length === 1 ? 0 : padding / 2.0; // For single circle: No padding, since it has no contour.
+                let interClusterSpacing = padding / (clusterNodes.length === 1 ? 4.0 : 2.0); // For single circle: Divide further by 2 since we draw a complete circular arc instead of 2+ intersecting arcs.
 
                 node.contourPadding = (node.depth - clusterParent.depth) * padding + uncertaintySum + contourClusterParentUncertainty;
                 node.planckPadding = (node.depth - clusterParent.depth) * padding + uncertaintySum + planckClusterParentUncertainty + interClusterSpacing;
@@ -308,12 +308,16 @@
             circles.push(new Circle(node.x, node.y, node.r + node.contourPadding));
         });
 
-        let outerCircleRing = getOuterCircleRing(circles, curvature);
-
         let arcs = [];
 
-        arcs = arcs.concat(generateCircleArcs(outerCircleRing));
-        arcs = arcs.concat(generateTangentArcs(outerCircleRing, curvature));
+        if (circles.length === 1) {
+            const arc = circles[0];
+            arcs.push(new Arc(arc.center.x, arc.center.y, 0, 2 * Math.PI, arc.radius));
+        } else {
+            let outerCircleRing = getOuterCircleRing(circles, curvature);
+            arcs = arcs.concat(generateCircleArcs(outerCircleRing));
+            arcs = arcs.concat(generateTangentArcs(outerCircleRing, curvature));
+        }
 
         return arcsToPaths(arcs);
     }
