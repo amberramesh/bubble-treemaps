@@ -256,11 +256,16 @@
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('text-anchor', 'middle')
             .style('fill', 'white')
-            .style('text-shadow', '-1px -1px 0 #888, 1px -1px 0 #888, -1px 1px 0 #888, 1px 1px 0 #888')
-            .selectAll(".label")
+            .style('paint-order', 'stroke')
+            .style('stroke', '#444')
+            .style('stroke-width', '4px')
+            .style('stroke-linejoin', 'round')
+            .style('letter-spacing', '1px');
+
+          topNLabelsNode.selectAll(".label")
             .data(topNLabels)
             .enter()
-              .append("text")
+            .append("text")
               .classed("label", true)
               .text((d) => titleAccessorFn(d))
               .attr("transform", function (d) {
@@ -310,42 +315,38 @@
 
         function changeLabelingMethod(methodType) {
           SELECTED_LABELING_METHOD = methodType;
+          topNLabelsNode.selectChildren().remove();
           switch(methodType) {
             case LabelingMethod.TopLeaves:
-              topNLabelsNode.remove();
               topNLabels = topNLeaves;
               break;
             case LabelingMethod.TopASNodes:
-              topNLabelsNode.remove();
               topNLabels = topNLeafParents;
               break;
             case LabelingMethod.FTUNodes:
-              topNLabelsNode.remove();
               topNLabels = ftuNodes;
               break;
           }
-          let svg = d3.select("#svgCircles");
-          topNLabelsNode = svg.append('g')
-            .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
-            .style('text-anchor', 'middle')
-            .style('fill', 'white')
-            .style('text-shadow', '-1px -1px 0 #888, 1px -1px 0 #888, -1px 1px 0 #888, 1px 1px 0 #888')
-            .selectAll(".label")
+          topNLabelsNode.selectAll('.label')
             .data(topNLabels)
             .enter()
-            .append("text")
-            .classed("label", true)
-            .text((d) => titleAccessorFn(d))
-            .attr("transform", function (d) {
-              return "translate(" + [d.x, d.y] + ")";
-            })
+              .append("text")
+              .classed("label", true)
+              .text((d) => titleAccessorFn(d))
+              .attr("transform", function (d) {
+                return "translate(" + [d.x, d.y] + ")";
+              })
         }
 
         function drawLegends(rootData, svg) {
           var legendHeight = 20,
             colorWidth = legendHeight * 3,
             interLegend = 4,
-            legendNodes = Array.from(colorMap).sort(([key1], [key2]) => key2.toString().localeCompare(key1.toString()));
+            legendNodes = Array.from(colorMap)
+              .map(([key1, key2]) => [
+                  CellSuperTypeLabel[key1] ?? key1,
+                  key2
+              ]).sort(([key1], [key2]) => key2.localeCompare(key1));
 
           const legendXOffset = 1600;
           const legendYOffset = (renderedSVGSize.height + legendNodes.length * 24) / 2;
@@ -353,8 +354,8 @@
             .classed('legend', true)
             .attr('transform', 'translate(' + [legendXOffset, legendYOffset] + ')')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
-            .style('stroke', 'gray')
-            .style('fill', 'gray');
+            .style('stroke', '#444')
+            .style('fill', '#444');
 
           var legends = legendContainer.selectAll('.legend')
             .data(legendNodes)
@@ -376,7 +377,7 @@
           legend.append('text')
             .classed('legend-text', true)
             .attr('transform', 'translate(' + [colorWidth + 5, -4] + ')')
-            .text(function (d) { return CellSuperTypeLabel[d[0]] ?? d[0] });
+            .text(function (d) { return d[0] });
 
           legendContainer.append('text')
             .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 5] + ')')
@@ -421,13 +422,13 @@
               AS_ROOT_TITLE = 'Spleen';
               COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
               colorMap = new Map([
-                [CellSuperType.Vasculature.toString(), 'red'],
-                [CellSuperType.Lymph.toString(), 'purple'],
-                [CellSuperType.Nerve.toString(), 'green'],
-                [CellSuperType.Others.toString(), 'orange'],
-                [CellSuperType.Immune.toString(), 'yellow'],
-                [CellSuperType.Connective.toString(), 'blue'],
-                [CellSuperType.Muscle.toString(), 'gray'],
+                [CellSuperType.Vasculature.toString(), '#d53e4f'],
+                [CellSuperType.Lymph.toString(), '#998ec3'],
+                [CellSuperType.Nerve.toString(), '#99d594'],
+                [CellSuperType.Others.toString(), '#fc8d59'],
+                [CellSuperType.Immune.toString(), '#fee08b'],
+                [CellSuperType.Connective.toString(), '#3288bd'],
+                [CellSuperType.Muscle.toString(), '#999999'],
               ]);
             break;
             case 'Skin_v1':
@@ -471,6 +472,7 @@
       <option value="Thymus_v1">Thymus</option>
       <option value="Vasculature_v1">Vasculature</option>
     </select>
+    <a href="https://docs.google.com/document/d/1D7fG5brd2iq58SUU1Uv3Qdal1X8Fzhy5tRiZA0HGeII/edit?usp=sharing" style="float:right">About</a>
     <button onclick="generateTreemap()">Generate SVG</button>
     <small style="color: gray; display: none" id="busyText">Generating bubble treemap, please wait...</small>
     <br /><br />
