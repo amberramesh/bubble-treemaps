@@ -122,7 +122,7 @@
 
         function getCountMapKey(cellId) {
           if (!cellId && cellId !== 0) return;
-          return Array.from(countMap.keys()).find(key => new RegExp(key, 'i').test(cellId));
+          return Array.from(countMap.keys()).find(key => new RegExp(`^${key}$`, 'i').test(cellId));
         }
 
         function groupTreeData(csvData) {
@@ -143,10 +143,12 @@
           const sortedLeaves = leaves.filter(d => d.value > CIRCLE_RADIUS).sort((a, b) => b.value - a.value);
 
           const topNLeaves = [];
+          let lastSize = Number.MAX_VALUE;
           for (const leaf of sortedLeaves) {
-            if (labels.size === n) break;
+            if (labels.size >= n && leaf.value < lastSize) break;
             labels.add(titleAccessorFn(leaf));
             topNLeaves.push(leaf);
+            lastSize = leaf.value;
           }
           return topNLeaves;
         }
@@ -236,8 +238,8 @@
           circleGroup.append("title")
             .text(function (d) {
               const data = dataAccessorFn(d);
-              const countMapKey = getCountMapKey(data['CT/1']) || getCountMapKey(data['CT/1/LABEL']);
-                return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(d)}`
+              const countMapKey = getCountMapKey(data['CT/1']) ?? getCountMapKey(data['CT/1/LABEL']);
+              return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(d)}`
             });
 
           // Add Top-N Labels
@@ -257,12 +259,12 @@
           topNLabelsNode = svg.append('g')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('text-anchor', 'middle')
-            .style('fill', 'white')
+            .style('fill', 'black')
             .style('paint-order', 'stroke')
-            .style('stroke', '#444')
-            .style('stroke-width', '4px')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px')
             .style('stroke-linejoin', 'round')
-            .style('letter-spacing', '1px');
+            // .style('letter-spacing', '1px');
 
           topNLabelsNode.selectAll(".label")
             .data(topNLabels)
