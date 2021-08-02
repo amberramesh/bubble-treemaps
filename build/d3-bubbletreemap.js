@@ -7,9 +7,6 @@
     function getLayerClusters(hierarchyRoot, layerDepth, padding) {
         var clusters = [];
 
-        // Starting with the root - we filter nodes from each level
-        // If the root has 3 children,
-        // layerNodes now has those 3 nodes
         let layerNodes = hierarchyRoot.descendants().filter(function(candidate) {
             return candidate.depth === layerDepth;
         });
@@ -20,7 +17,6 @@
             });
 
             clusterNodes.forEach(function(node) {
-                // The path excluding the cluster parent and the cluster node
                 let path = node.path(clusterParent).slice(1,-1);
 
                 let uncertaintySum = path.reduce(function(acc, pathnode){
@@ -72,6 +68,7 @@
             .size([width, height]);
 
         pack(hierarchyRoot); // Use pack to arrange circles on deepest layer.
+        truncateFloatAttributes(hierarchyRoot);
 
         for(let layerDepth = hierarchyRoot.height - 1; layerDepth >= 0; layerDepth--) {
             // Get clusters of circles on this layer.
@@ -99,6 +96,16 @@
 
                 layoutClusters(currentPPClusters, centroid);
             });
+        }
+    }
+
+    function truncateFloatAttributes(node) {
+        node.r = parseFloat(node.r.toFixed(10));
+        node.x = parseFloat(node.x.toFixed(10));
+        node.y = parseFloat(node.y.toFixed(10));
+        if (!node.children) return;
+        for (const child of node.children) {
+            truncateFloatAttributes(child);
         }
     }
 
@@ -496,6 +503,19 @@
         }
 
         return contours;
+    }
+
+    function getCircularReplacer() {
+        const seen = new WeakSet();
+        return (key, value) => {
+            if (typeof value === "object" && value !== null) {
+                if (seen.has(value)) {
+                    return;
+                }
+                seen.add(value);
+            }
+            return value;
+        };
     }
 
     /*
