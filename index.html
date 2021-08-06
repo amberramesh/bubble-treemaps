@@ -40,7 +40,7 @@
         var AS_ROOT_TITLE = null;
         var CIRCLE_RADIUS = 8;
         var CONTOUR_WIDTH = 3;
-        var LOG_SCALE_FACTOR = 4; // Eg: log_e(7.3890561) => 2
+        var LOG_SCALE_BASE = 4; // Eg: log_e(7.3890561) => 2
         var TOOLTIP_PATH_START_LEVEL = 0; // 0-indexed
         var TOP_N_LEAVES = 10;
         var TOP_AS_MIN_CHILDREN = 5;
@@ -120,9 +120,14 @@
           return totalCount;
         }
 
-        function getCountMapKey(cellId) {
-          if (!cellId && cellId !== 0) return;
-          return Array.from(countMap.keys()).find(key => new RegExp(`^${key}$`, 'i').test(cellId));
+        function getCountMapKey(node) {
+          const data = dataAccessorFn(node);
+          const identifiers = ['CT/1', 'CT/1/LABEL'];
+          for (const ctId of identifiers) {
+            if (!ctId) continue;
+            const key = Array.from(countMap.keys()).find(key => new RegExp(`^${key}$`, 'i').test(data[ctId]));
+            if (key) return key;
+          }
         }
 
         function groupTreeData(csvData) {
@@ -160,11 +165,11 @@
               // Intermediate node check, return the set size
               if (data.size) return 0;
               // Leaf node, check if count is available in the typology sheet
-              const leaf = dataAccessorFn({ data });
-              // TODO: Remove adhoc code that gets countMapKey based on CT/1 or CT/1/LABEL.
-              // This should always be fetched based on CT/1/ID.
-              const countMapKey = getCountMapKey(leaf['CT/1']) ?? getCountMapKey(leaf['CT/1/LABEL']);
-              return countMapKey ? CIRCLE_RADIUS * (Math.log(countMap.get(countMapKey)) / Math.log(LOG_SCALE_FACTOR)) : CIRCLE_RADIUS;
+              const countMapKey = getCountMapKey({ data });
+              // Actual circle size is CIRCLE_RADIUS * log(count)
+              // When count falls below LOG_SCALE_BASE, its log is a fractional unit.
+              // Sizes are never below CIRCLE_RADIUS, so the next size class is used instead.
+              return countMapKey ? CIRCLE_RADIUS * (Math.max(Math.log(countMap.get(countMapKey)) / Math.log(LOG_SCALE_BASE), 1)) : CIRCLE_RADIUS;
             })
             .sort((a, b) => b.value - a.value);
 
@@ -177,7 +182,7 @@
               .padding(padding)
               .curvature(curvature)
               .hierarchyRoot(root)
-              .width(renderedSVGSize.width - 400)
+              .width(renderedSVGSize.width - 900)
               .height(renderedSVGSize.height)
               .colormap(colorMap);
 
@@ -237,9 +242,8 @@
           // Add Hover Text
           circleGroup.append("title")
             .text(function (d) {
-              const data = dataAccessorFn(d);
-              const countMapKey = getCountMapKey(data['CT/1']) ?? getCountMapKey(data['CT/1/LABEL']);
-              return `${data['CT/1']}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(d)}`
+              const countMapKey = getCountMapKey(d);
+                return `${titleAccessorFn(d)}${countMap.has(countMapKey) ? ' ('+ countMap.get(countMapKey) +')' : ''}\n\nAS Tree: ${getASPath(d)}`
             });
 
           // Add Top-N Labels
@@ -263,8 +267,7 @@
             .style('paint-order', 'stroke')
             .style('stroke', 'black')
             .style('stroke-width', '1px')
-            .style('stroke-linejoin', 'round')
-            // .style('letter-spacing', '1px');
+            .style('stroke-linejoin', 'round');
 
           topNLabelsNode.selectAll(".label")
             .data(topNLabels)
@@ -352,21 +355,21 @@
                   key2
               ]).sort(([key1], [key2]) => key2.localeCompare(key1));
 
-          const legendXOffset = 1600;
-          const legendYOffset = (renderedSVGSize.height + legendNodes.length * 24) / 2;
+          let legendXOffset = 1600;
+          let legendYOffset = (renderedSVGSize.height + legendNodes.length * 24) / 2;
           var legendContainer = svg.append('g')
-            .classed('legend', true)
+            .classed('ct-legend', true)
             .attr('transform', 'translate(' + [legendXOffset, legendYOffset] + ')')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('stroke', '#444')
             .style('fill', '#444');
 
-          var legends = legendContainer.selectAll('.legend')
+          var legends = legendContainer.selectAll('.ct-legend-li')
             .data(legendNodes)
             .enter();
 
           var legend = legends.append('g')
-            .classed('legend', true)
+            .classed('ct-legend-li', true)
             .attr('transform', function (d, i) {
               return 'translate(' + [0, -i * (legendHeight + interLegend)] + ')';
             })
@@ -384,9 +387,87 @@
             .text(function (d) { return d[0] });
 
           legendContainer.append('text')
-            .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 5] + ')')
+            .attr('transform', 'translate(' + [0, -legendNodes.length * (legendHeight + interLegend) - 10] + ')')
             .style('font-size', '1.2em')
             .text('Cell Types');
+
+          const knownCellCounts = rootData.leaves().filter(getCountMapKey).map(d => countMap.get(getCountMapKey(d)));
+          const minCount = Math.min(...knownCellCounts);
+          const maxCount = Math.max(...knownCellCounts);
+          let safeMaxCount = 1, safeMinCount = 1;
+          const scaledCountList = [];
+          if (maxCount > 0) {
+            const minScaledCount = safeMinCount = Math.floor(Math.max(Math.log(minCount) / Math.log(LOG_SCALE_BASE), 1));
+            const maxScaledCount = safeMaxCount = Math.floor(Math.max(Math.log(maxCount) / Math.log(LOG_SCALE_BASE), 1));
+            const ranges = Array(maxScaledCount - minScaledCount).fill().map((_, i) => maxScaledCount - i - 1);
+
+            scaledCountList.push({
+              count: maxScaledCount,
+              title: `\u2265 ${Math.pow(LOG_SCALE_BASE, maxScaledCount)}`
+            });
+
+            ranges.forEach(min => {
+              const max = min + 1, mid = (min + max) / 2;
+              scaledCountList.push({
+                count: mid,
+                // Display range-min as 1 for the lowest size class
+                title: `${Math.pow(LOG_SCALE_BASE, min === 1 ? 0 : min)} to ${Math.pow(LOG_SCALE_BASE, max)}`
+              });
+            })
+          }
+          if (knownCellCounts.length < rootData.leaves().length) {
+            // Scaled count is taken as 1 for unknown counts, so that they are shown with the minimum size.
+            safeMinCount = 1;
+            scaledCountList.push({
+              count: safeMinCount,
+              title: 'Unknown'
+            });
+          }
+
+          interLegend = 10;
+          const listHeight = getCountLegendSpacing(scaledCountList, interLegend);
+          legendXOffset = legendXOffset + document.querySelector('.ct-legend').getBoundingClientRect().width + 100;
+          legendYOffset = (renderedSVGSize.height + listHeight) / 2;
+          legendContainer = svg.append('g')
+            .classed('cr-legend', true)
+            .attr('transform', 'translate(' + [legendXOffset, legendYOffset] + ')')
+            .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
+            .style('stroke', '#444')
+            .style('fill', '#444');
+
+          legends = legendContainer.selectAll('.cr-legend-li')
+            .data(scaledCountList)
+            .enter();
+
+          legend = legends.append('g')
+            .classed('cr-legend-li', true)
+            .attr('transform', function (d, i) {
+              return 'translate(' + [0, -(getCountLegendSpacing(scaledCountList.slice(0, i), interLegend))] + ')';
+            })
+          
+          legend.append('circle')
+            .classed('legend-color', true)
+            .attr('y', -legendHeight)
+            .attr('r', function(d) { return CIRCLE_RADIUS * d.count })
+
+          legend.append('text')
+            .classed('legend-text', true)
+            .attr('transform', 'translate(' + [CIRCLE_RADIUS * safeMaxCount + 20, 4] + ')')
+            .text(function (d) { return d.title });
+
+          legendContainer.append('text')
+            .attr('transform', 'translate(' + [-(CIRCLE_RADIUS * safeMaxCount), -listHeight - 5] + ')')
+            .style('font-size', '1.2em')
+            .text('Cell Count');
+        }
+
+        function getCountLegendSpacing(countList, padding = 0) {
+          let res = 0;
+          for (const { count } of countList) {
+            // Diameter of circle with padding
+            res += (2 * CIRCLE_RADIUS * count) + padding;
+          }
+          return res;
         }
         
         function updateOrganSelection(selectEl) {
@@ -487,7 +568,7 @@
     <input type="radio" name="nodeLabels" id="ftuNodesOpt" onchange="changeLabelingMethod(2)">
     <label for="ftuNodesOpt">FTU Nodes</label>
     <div id="svgCirclesContainer">
-        <svg id="svgCircles" width="2000px" height="1700px"></svg>
+        <svg id="svgCircles" width="2500px" height="1700px"></svg>
     </div>
 
     <div style="position: absolute; left:20px; bottom:40px;display:none" id="paddingSliderContainer">
