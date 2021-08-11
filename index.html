@@ -236,8 +236,8 @@
             if (node.children.some(c => leafParentsCandidates.has(c))) continue;
             leafParents.push(node);
           }
-          ftuNodes = Array.from(new Set(leaves.filter(isFTU).map(d => d.parent)));
-          [...leafParents, ...ftuNodes].sort((a, b) => b.depth - a.depth)
+          ftuNodes = Array.from(new Set(leaves.filter(isFTU).map(d => d)));
+          leafParents.sort((a, b) => b.depth - a.depth)
             .forEach((d) =>
               Object.assign(d, getCircleCentroid(d.children))
             );
