@@ -39,6 +39,7 @@
         var COUNT_CSV_DATA_SOURCE = null;
         var AS_ROOT_TITLE = null;
         var CIRCLE_RADIUS = 8;
+        var FTU_CIRCLE_RADIUS = 50;
         var CONTOUR_WIDTH = 3;
         var LOG_SCALE_BASE = 4; // Eg: log_e(7.3890561) => 2
         var TOOLTIP_PATH_START_LEVEL = 0; // 0-indexed
@@ -81,6 +82,11 @@
         function compressTree(nestedMap) {
           for (const [key, value] of nestedMap.entries()) {
             if (value instanceof Map) {
+              if (Array.from(value.entries()).some(data => isFTU({ data }))) {
+                nestedMap.set(key, [{
+                  FTU: true
+                }])
+              }
               compressTree(value);
               if (key === '') {
                 let skipDelete = false;
@@ -143,9 +149,32 @@
           return groupedData;
         }
 
+        function isFTU(node) {
+          if (Array.isArray(node.children)) {
+            for (const child of node.children) {
+              if (!!dataAccessorFn(child)['FTU']) {
+                return true
+              }
+            }
+            return false;
+          } else {
+            return !!dataAccessorFn(node)['FTU']
+          }
+        }
+
+        function isCellTypeNode(node) {
+          if (Array.isArray(node.data)) {
+            const [key, value] = node.data;
+            if (Array.isArray(value)) {
+              return !!value[0]['CT/1'];
+            }
+          }
+          return false;
+        }
+
         function computeTopNLeaves(leaves, n) {
           const labels = new Set();
-          const sortedLeaves = leaves.filter(d => d.value > CIRCLE_RADIUS).sort((a, b) => b.value - a.value);
+          const sortedLeaves = leaves.filter(d => isCellTypeNode(d) && d.value > CIRCLE_RADIUS).sort((a, b) => b.value - a.value);
 
           const topNLeaves = [];
           let lastSize = Number.MAX_VALUE;
@@ -162,8 +191,10 @@
             // Create hierarchy.
           let root = d3.hierarchy(Array.from(data)[0], childrenAccessorFn)
             .sum(data => {
-              // Intermediate node check, return the set size
-              if (data.size) return 0;
+              // Intermediate node check
+              const [key, value] = data;
+              if (value instanceof Map) return 0;
+              if (value[0].FTU) return FTU_CIRCLE_RADIUS;
               // Leaf node, check if count is available in the typology sheet
               const countMapKey = getCountMapKey({ data });
               // Actual circle size is CIRCLE_RADIUS * log(count)
@@ -197,7 +228,7 @@
             if (node.children.some(c => leafParentsCandidates.has(c))) continue;
             leafParents.push(node);
           }
-          ftuNodes = Array.from(new Set(leaves.filter(d => dataAccessorFn(d)['FTU']).map(d => d.parent)));
+          ftuNodes = Array.from(new Set(leaves.filter(isFTU).map(d => d.parent)));
           [...leafParents, ...ftuNodes].sort((a, b) => b.depth - a.depth)
             .forEach((d) =>
               Object.assign(d, getCircleCentroid(d.children))
@@ -227,7 +258,7 @@
           let circleGroup = svg.append("g")
               .attr("class", "circles")
               .selectAll("circle")
-              .data(leaves)
+              .data(leaves.filter(d => !isFTU(d)))
               .enter()
                 .append("circle")
                 .classed('circle', true)
