@@ -567,6 +567,21 @@
             colorMap.clear();
           }
         }
+
+        // With reference to https://stackoverflow.com/a/46403589/10283528
+        function downloadSVG() {
+          const svgEl = document.getElementById('svgCircles');
+          svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          const svgData = svgEl.outerHTML;
+          const preface = '<?xml version="1.0" standalone="no"?>\r\n';
+          const svgBlob = new Blob([preface, svgData], { type: "image/svg+xml;charset=utf-8" });
+          const svgUrl = URL.createObjectURL(svgBlob);
+          const downloadLink = document.createElement("a");
+          downloadLink.href = svgUrl;
+          downloadLink.download = AS_ROOT_TITLE;
+          downloadLink.click();
+        }
+
     </script>
     <style>
       .circle:hover {
@@ -590,6 +605,7 @@
     </select>
     <a href="https://docs.google.com/document/d/1D7fG5brd2iq58SUU1Uv3Qdal1X8Fzhy5tRiZA0HGeII/edit?usp=sharing" style="float:right">About</a>
     <button onclick="generateTreemap()">Generate SVG</button>
+    <button onclick="downloadSVG()">Download</button>
     <small style="color: gray; display: none" id="busyText">Generating bubble treemap, please wait...</small>
     <br /><br />
     <input type="radio" name="nodeLabels" id="topLeavesOpt" onchange="changeLabelingMethod(0)" checked>
