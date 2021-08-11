@@ -1,31 +1,31 @@
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
-AS/1,AS/2,AS/3,AS/4,AS/5,AS/6,AS/7,AS/8,AS/9,AS/9/count
-hematopoietic cell,leukocyte,myeloid leukocyte,monocyte,CD14-positive monocyte,,,,,1394
-hematopoietic cell,leukocyte,myeloid leukocyte,myeloid dendritic cell,CD141-positive myeloid dendritic cell,,,,,31
-hematopoietic cell,leukocyte,myeloid leukocyte,myeloid dendritic cell,CD1c-positive myeloid dendritic cell,,,,,461
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,innate lymphoid cell,group 1 innate lymphoid cell,natural killer cell,mature natural killer cell,"CD16-negative, CD56-bright natural killer cell",49
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,innate lymphoid cell,group 1 innate lymphoid cell,natural killer cell,mature natural killer cell,"CD16-positive, CD56-dim natural killer cell",214
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,innate lymphoid cell,any,,,,27
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,T cell,mature T cell,memory T cell,"CD4-positive, alpha-beta memory T cell",,266
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,T cell,mature T cell,memory T cell,"CD8-positive, alpha-beta memory T cell",,97
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,T cell,mature T cell,naive T cell,"naive thymus-derived CD4-positive, alpha-beta T cell",,84
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,T cell,alpha-beta T cell,mature alpha-beta T cell,"CD8-positive, alpha-beta T cell","CD8-positive, alpha-beta cytotoxic T cell",150
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,T cell,gamma-delta T cell,,,,154
-hematopoietic cell,leukocyte,mononuclear cell,lymphocyte,lymphocyte of B lineage,antibody secreting cell,plasma cell,,,184
-hematopoietic cell,leukocyte,professional antigen presenting cell,mature B cell,germinal center B cell,,,,,509
-hematopoietic cell,leukocyte,professional antigen presenting cell,mature B cell,plasmablast,,,,,148
-hematopoietic cell,leukocyte,splenocyte,marginal zone B cell,,,,,,662
-hematopoietic cell,leukocyte,splenocyte,splenic macrophage,,,,,,153
-hematopoietic cell,myeloid cell,erythroid lineage cell,,,,,,,161
-hematopoietic cell,hematopoietic precursor cell,hematopoietic stem cell,,,,,,,49
-epithelial cell,meso-epithelial cell,endothelial cell,splenic endothelial cell,,,,,,297
-connective tissue cell,fibroblast,splenic fibroblast,,,,,,,14
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+AS/1,AS/1/ID,AS/2,AS/2/ID,AS/3,AS/3/ID,AS/4,AS/4/ID,AS/5,AS/5/ID,AS/6,AS/6/ID,AS/7,AS/7/ID,AS/8,AS/8/ID,AS/9,AS/9/ID,AS/9/count
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,myeloid leukocyte,CL:0000766,monocyte,CL:0000576,CD14-positive monocyte,CL:0001054,,,,,,,,,1394
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,myeloid leukocyte,CL:0000766,myeloid dendritic cell,CL:0000782,CD141-positive myeloid dendritic cell,CL:0002394,,,,,,,,,31
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,myeloid leukocyte,CL:0000766,myeloid dendritic cell,CL:0000782,CD1c-positive myeloid dendritic cell,CL:0002399,,,,,,,,,461
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,innate lymphoid cell,CL:0001065,group 1 innate lymphoid cell,CL:0001067,natural killer cell,CL:0000623,mature natural killer cell,CL:0000824,"CD16-negative, CD56-bright natural killer cell",CL:0000938,49
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,innate lymphoid cell,CL:0001065,group 1 innate lymphoid cell,CL:0001067,natural killer cell,CL:0000623,mature natural killer cell,CL:0000824,"CD16-positive, CD56-dim natural killer cell",CL:0000939,214
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,innate lymphoid cell,CL:0001065,any,,,,,,,,27
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,T cell,CL:0000084,mature T cell,CL:0002419,memory T cell,CL:0000813,"CD4-positive, alpha-beta memory T cell",CL:0000897,,,266
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,T cell,CL:0000084,mature T cell,CL:0002419,memory T cell,CL:0000813,"CD8-positive, alpha-beta memory T cell",CL:0000909,,,97
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,T cell,CL:0000084,mature T cell,CL:0002419,naive T cell,CL:0000898,"naive thymus-derived CD4-positive, alpha-beta T cell",CL:0000895,,,84
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,T cell,CL:0000084,alpha-beta T cell,CL:0000789,mature alpha-beta T cell,CL:0000791,"CD8-positive, alpha-beta T cell",CL:0000625,"CD8-positive, alpha-beta cytotoxic T cell",CL:0000794,150
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,T cell,CL:0000084,gamma-delta T cell,CL:0000798,,,,,,,154
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,mononuclear cell,CL:0000842,lymphocyte,CL:0000542,lymphocyte of B lineage,CL:0000945,antibody secreting cell,CL:0000946,plasma cell,CL:0000786,,,,,184
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,professional antigen presenting cell,CL:0000145,mature B cell,CL:0000785,germinal center B cell,CL:0000844,,,,,,,,,509
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,professional antigen presenting cell,CL:0000145,mature B cell,CL:0000785,plasmablast,CL:0000980,,,,,,,,,148
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,splenocyte,CL:2000074,marginal zone B cell,CL:0000845,,,,,,,,,,,662
+hematopoietic cell,CL:0000988,leukocyte,CL:0000738,splenocyte,CL:2000074,splenic macrophage,CL:0000871,,,,,,,,,,,153
+hematopoietic cell,CL:0000988,myeloid cell,CL:0000763,erythroid lineage cell,CL:0000764,,,,,,,,,,,,,161
+hematopoietic cell,CL:0000988,hematopoietic precursor cell,CL:0008001,hematopoietic stem cell,CL:0000037,,,,,,,,,,,,,49
+epithelial cell,CL:0000066,meso-epithelial cell,CL:0002078,endothelial cell,CL:0000115,splenic endothelial cell,CL:2000053,,,,,,,,,,,297
+connective tissue cell,CL:0002320,fibroblast,CL:0000057,splenic fibroblast,CL:2000051,,,,,,,,,,,,,14

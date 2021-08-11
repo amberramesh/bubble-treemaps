@@ -25,6 +25,10 @@
           Connective: 6,
           Muscle: 7
         };
+        const CTMatchType = {
+          ID: 0,
+          Name: 1
+        };
         const CellSuperTypeLabel = {
           [CellSuperType.Vasculature]: 'Vasculature',
           [CellSuperType.Lymph]: 'Lymph',
@@ -38,6 +42,7 @@
         var ASCT_CSV_DATA_SOURCE = null;
         var COUNT_CSV_DATA_SOURCE = null;
         var AS_ROOT_TITLE = null;
+        var CT_MATCH_TYPE = CTMatchType.ID;
         var CIRCLE_RADIUS = 8;
         var FTU_CIRCLE_RADIUS = 50;
         var CONTOUR_WIDTH = 3;
@@ -63,7 +68,8 @@
             if (!working) {
               working = true;
 
-              const treeData = groupTreeData(csvData);
+              const groupRegex = /^(AS|CT)\/[0-9]+$/;
+              const treeData = groupTreeData(csvData, groupRegex);
               if (treeData) {
                 let svg = d3.select("#svgCircles");
                 svg.selectAll("*").remove();
@@ -107,8 +113,10 @@
           return d3.text(COUNT_CSV_DATA_SOURCE)
             .then(rootData => {
               countCsvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
-              const groupedData = groupTreeData(countCsvData);
+              const groupRegex = CT_MATCH_TYPE === CTMatchType.ID ? /^(AS|CT)\/[0-9]+\/ID$/ : /^(AS|CT)\/[0-9]+$/
+              const groupedData = groupTreeData(countCsvData, groupRegex);
               computeCellCount(groupedData);
+              countMap.delete('');
               // console.table(Array.from(countMap));
             });
         }
@@ -128,7 +136,7 @@
 
         function getCountMapKey(node) {
           const data = dataAccessorFn(node);
-          const identifiers = ['CT/1', 'CT/1/LABEL'];
+          const identifiers = CT_MATCH_TYPE === CTMatchType.ID ? ['CT/1/ID'] : ['CT/1', 'CT/1/LABEL'];
           for (const ctId of identifiers) {
             if (!ctId) continue;
             const key = Array.from(countMap.keys()).find(key => new RegExp(`^${key}$`, 'i').test(data[ctId]));
@@ -136,9 +144,9 @@
           }
         }
 
-        function groupTreeData(csvData) {
+        function groupTreeData(csvData, groupRegex) {
           const groupedData = d3.group(csvData, ...csvData.columns
-            .filter(c => /^(AS|CT)\/[0-9]+$/.test(c))
+            .filter(c => groupRegex.test(c))
             .sort((labelA, labelB) => { 
               const [typeA, levelA] = labelA.split('/');
               const [typeB, levelB] = labelB.split('/');
@@ -507,36 +515,43 @@
             case 'Brain_v1':
               AS_ROOT_TITLE = 'Brain';
               COUNT_CSV_DATA_SOURCE = './html/motor_cortex.csv';
+              CT_MATCH_TYPE = CTMatchType.Name;
               colorMap.clear();
               break;
             case 'Heart_v1':
               AS_ROOT_TITLE = 'Heart';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Kidney_v1':
               AS_ROOT_TITLE = 'Kidney';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Large_Intestine_v1':
               AS_ROOT_TITLE = 'Large Intestine';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Lymph_Node_v1':
               AS_ROOT_TITLE = 'Lymph Node';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Lung_v1':
               AS_ROOT_TITLE = 'Lung';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Spleen_v1.6':
               AS_ROOT_TITLE = 'Spleen';
               COUNT_CSV_DATA_SOURCE = './html/azimuth-spleen-cell-sets.json.csv';
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap = new Map([
                 [CellSuperType.Vasculature.toString(), '#d53e4f'],
                 [CellSuperType.Lymph.toString(), '#998ec3'],
@@ -550,16 +565,19 @@
             case 'Skin_v1':
               AS_ROOT_TITLE = 'Skin';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Thymus_v1':
               AS_ROOT_TITLE = 'Thymus';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             case 'Vasculature_v1':
               AS_ROOT_TITLE = 'Vasculature';
               COUNT_CSV_DATA_SOURCE = null;
+              CT_MATCH_TYPE = CTMatchType.ID;
               colorMap.clear();
               break;
             default:
