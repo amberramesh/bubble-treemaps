@@ -88,12 +88,12 @@
         function compressTree(nestedMap) {
           for (const [key, value] of nestedMap.entries()) {
             if (value instanceof Map) {
-              if (Array.from(value.entries()).some(data => isFTU({ data }))) {
+              compressTree(value);
+              if (Array.from(value.entries()).every(data => isFTU({ data }))) {
                 nestedMap.set(key, [{
                   FTU: true
                 }])
               }
-              compressTree(value);
               if (key === '') {
                 let skipDelete = false;
                 for (const [nkey, nvalue] of value.entries()) {
