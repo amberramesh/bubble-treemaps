@@ -1,34 +1,43 @@
-# Bubble Treemaps for Uncertainty Visualization
+# Human Reference Atlas (HRA) - Bubble Treemaps
 
-I want to thank [Thilo Spinner](https://github.com/tlow0) for providing this implementation.
+## Overview
+HRA Bubble Treemaps is a fork of [bubble treemaps](https://github.com/grtlr/bubble-treemaps) that generates visualizations for the human body partonomy.
 
-### Disclaimer
-This is an ongoing rewrite of Bubble Treemaps in JavaScript and not the code that was used to generate the images in the paper. 
+<img src="img/spleen_v1_6.PNG" />
 
-A live demo can be found at https://grtlr.github.io/bubble-treemaps/.
+## Description
+### Hierarchy Generation
 
-<img src="https://github.com/grtlr/bubble-treemaps/blob/master/bubble-treemap.png?raw=true" alt="Example of a Bubble Treemap" width="300px" height="300px">
+**Column Grouping**
 
-More details about the publication, including a pre-print of the paper, can be found [here](http://graphics.uni-konstanz.de/publikationen/Goertler2018BubbleTreemapsUncertainty/index.html).
+The partonomy hierarchy is constructed from the flattened ASCT+B master tables. Rows are grouped on common column values, starting from the highest anatomical structure level to the lowest, then moving towards common cell types. This can eventually be extended to grouping on common biomarkers.
 
-### Abstract
-We present a novel type of circular treemap, where we intentionally allocate extra space for additional visual variables. With this extended visual design space, we encode hierarchically structured data along with their uncertainties in a combined diagram. We introduce a hierarchical and force-based circle-packing algorithm to compute Bubble Treemaps, where each node is visualized using nested contour arcs. Bubble Treemaps do not require any color or shading, which offers additional design choices. We explore uncertainty visualization as an application of our treemaps using standard error and Monte Carlo-based statistical models. To this end, we discuss how uncertainty propagates within hierarchies. Furthermore, we show the effectiveness of our visualization using three different examples: the package structure of Flare, the S&P 500 index, and the US consumer expenditure survey.
+**Tree Compression**
 
-### Citation
-```
-@article{Goertler2017BubbleTreemapsUncertainty,
-  author  = {Jochen Görtler and Christoph Schulz and Daniel Weiskopf and Oliver Deussen},
-  title   = {Bubble Treemaps for Uncertainty Visualization},
-  journal = {IEEE Transactions on Visualization and Computer Graphics},
-  year    = {2018},
-  volume  = {24},
-  number  = {1},
-  pages   = {719-728},
-  doi     = {10.1109/TVCG.2017.2743959},
-}
-```
+Certain cell types may be linked to higher level anatomical structures, compared to other cell types in the dataset. Grouping by column always produces a height-balanced tree, so the hierarchy for these cell types would include intermediate nodes grouped on empty cell values. Tree compression removes such nodes and links the cell type back to the appropriate higher-level structure.
 
-### Building 
+**Node Representation**
 
-    npm run build
-    npm run minimize
+### Node Weight Assignment
+Nodes are assigned weight based on cell count. Count information is extracted from [Azimuth reference files](https://azimuth.hubmapconsortium.org/references/). The scripts to extract this data can be [found here](https://github.com/DarshalShetty/asctb-azimuth-data-comparison). Since the hierarchy and count information come from different sources, a merge strategy needs be applied. The ideal merge uses cell ontology IDs to identify common cell types, otherwise the sources are merged using matching names or labels.
+### Coloring Methods
+Contours are assigned differential shades, with a thicker, darker edge at the root that diminishes while moving closer to the leaves.
+
+Leaves, which are typically unique cell types, are represented by colored circles. These circles can be colored based on categorical information so that multiple cell types related by a common factor are assigned the same color. Leaf nodes that do not represent a cell type are colored in black to represent a missing link.
+### Labeling Methods
+
+**Top-N Cell Types**: Cell types are ranked on highest count using the [standard approach](https://en.wikipedia.org/wiki/Ranking#Standard_competition_ranking_.28.221224.22_ranking.29) and the top N are labeled, with default N = 10.
+
+**Top-N Clusters**
+
+Anatomical structures linked to a minimum of N-cells are labeled, with a default N = 5.
+
+**FTU Nodes**
+
+Labels a collection of FTUs, where an FTU is the largest cluster having all descendant nodes marked as FTU.
+### Legends
+The cell type legend is based on the coloring approach selected. This would either be the categorical information, such as cell supertypes, or the unique cell types occurring in the dataset.
+
+The cell count legend represents the approximate circle sizes observed for different cell count ranges. The circle size is a logarithmic function of the cell count, so updating the base of the log updates the content of this legend. The content is also based on the minimum and maximum values in the range of cell counts, and if count is unknown for any cell type.
+### Text Descriptions
+Text nodes are embedded into contours and circles that contain the title of the node along with a recursively-computed path required to reach the node from the root. Most web browsers should render this as a tooltip on the UI.
