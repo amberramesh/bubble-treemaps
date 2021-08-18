@@ -38,7 +38,6 @@
           [CellSuperType.Connective]: 'Connective',
           [CellSuperType.Muscle]: 'Muscle',
         };
-
         var ASCT_CSV_DATA_SOURCE = null;
         var COUNT_CSV_DATA_SOURCE = null;
         var AS_ROOT_TITLE = null;
@@ -244,7 +243,7 @@
 
           // Draw contour.
           let contourGroup = svg.append("g")
-            .attr("class", "contour")
+            .attr("class", "contours")
             .selectAll("path")
             .data(bubbletreemap.getContour())
             .enter()
@@ -300,6 +299,7 @@
               break;
           }
           topNLabelsNode = svg.append('g')
+            .attr('class', 'labels')
             .style('font-family', 'Verdana, Geneva, Tahoma, sans-serif')
             .style('text-anchor', 'middle')
             .style('fill', 'black')
@@ -320,6 +320,7 @@
             
           // Add Title Text
           svg.append("text")
+            .attr('class', 'title')
             .attr("transform", "translate(" + [renderedSVGSize.width / 2, 100] + ")")
             .attr("text-anchor", "middle")
             .text(`${AS_ROOT_TITLE} Partonomy`)
@@ -600,6 +601,25 @@
           downloadLink.click();
         }
 
+        function downloadDiagramOnly() {
+          const svgEl = document.getElementById('svgCircles');
+          const svgDiagram = svgEl.cloneNode(true);
+          svgDiagram.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          const discardNodes = Array.from(svgDiagram.childNodes).filter(n => !['contours', 'circles', 'labels'].includes(n.className.baseVal));
+          for (const node of discardNodes) {
+            console.log(node)
+            svgDiagram.removeChild(node);
+          }
+          const svgData = svgDiagram.outerHTML;
+          const preface = '<?xml version="1.0" standalone="no"?>\r\n';
+          const svgBlob = new Blob([preface, svgData], { type: "image/svg+xml;charset=utf-8" });
+          const svgUrl = URL.createObjectURL(svgBlob);
+          const downloadLink = document.createElement("a");
+          downloadLink.href = svgUrl;
+          downloadLink.download = AS_ROOT_TITLE;
+          downloadLink.click();
+        }
+
     </script>
     <style>
       .circle:hover {
@@ -624,6 +644,7 @@
     <a href="https://docs.google.com/document/d/1D7fG5brd2iq58SUU1Uv3Qdal1X8Fzhy5tRiZA0HGeII/edit?usp=sharing" style="float:right">About</a>
     <button onclick="generateTreemap()">Generate SVG</button>
     <button onclick="downloadSVG()">Download</button>
+    <button onclick="downloadDiagramOnly()">Download Diagram Only</button>
     <small style="color: gray; display: none" id="busyText">Generating bubble treemap, please wait...</small>
     <br /><br />
     <input type="radio" name="nodeLabels" id="topLeavesOpt" onchange="changeLabelingMethod(0)" checked>
