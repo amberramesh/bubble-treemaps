@@ -212,8 +212,8 @@
     function colorHierarchy(hierarchyRoot, colorMap) {
         hierarchyRoot.leaves().forEach(function(leaf) {
             // Use super type if available, else use the actual cell type
-            const cellType = (leaf.data[1][0]['CT/1/SUPERTYPE']) ||
-            (leaf.data[1][0]['CT/1'] && leaf.data[0]);
+            const leafData = dataAccessor(leaf).next().value;
+            const cellType = leafData['CT/1/SUPERTYPE'] || leafData['CT/1'];
             if (cellType && !colorMap.has(cellType)) {
                 colorMap.set(cellType, getRandomColor());
             }
@@ -505,19 +505,6 @@
         return contours;
     }
 
-    function getCircularReplacer() {
-        const seen = new WeakSet();
-        return (key, value) => {
-            if (typeof value === "object" && value !== null) {
-                if (seen.has(value)) {
-                    return;
-                }
-                seen.add(value);
-            }
-            return value;
-        };
-    }
-
     /*
      * Implanckementation.
      */
@@ -545,6 +532,16 @@
             getContour: function() {
                 // Compute contours.
                 return contourHierarchy(hierarchyRoot, padding, curvature);
+            },
+
+            recomputeCentroids: function() {
+                hierarchyRoot.descendants().reverse()
+                    .map(node => node.parent)
+                    .forEach(node => {
+                        if (!node) return;
+                        Object.assign(node, getCircleCentroid(node.children));
+                    })
+                return bubbletreemap;
             },
 
             hierarchyRoot: function(_) {
