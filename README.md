@@ -15,6 +15,7 @@ The following organs/structures are supported:
 - Skin
 - Thymus
 - Vasculature
+- Eye
 
 Due to performance issues, Heart and Respiratory System datasets are disabled.
 ## Details
@@ -33,7 +34,7 @@ Certain cell types may be linked to higher level anatomical structures, compared
 When enabled, the subtree under the largest cluster composed of only FTU nodes are pruned, and the node with the pruned subtree is assigned a large weight to render it as an enlarged circle. This can be used to embed another SVG or image to display alternative content.
 
 ### Node Weight Assignment
-Nodes are assigned weight based on cell count. Count information is extracted from [Azimuth reference files](https://azimuth.hubmapconsortium.org/references/). The scripts to extract this data can be [found here](https://github.com/DarshalShetty/asctb-azimuth-data-comparison). Since the hierarchy and count information come from different sources, a merge strategy needs be applied. The ideal merge uses cell ontology IDs to identify common cell types, otherwise the sources are merged using matching names or labels.
+Nodes are assigned weight based on cell count. Count information is extracted from [Azimuth reference files](https://azimuth.hubmapconsortium.org/references/). The scripts to extract this data can be [found here](https://github.com/hubmapconsortium/asctb-azimuth-data-comparison). Since the hierarchy and count information come from different sources, a merge strategy needs be applied. The ideal merge uses cell ontology IDs to identify common cell types, otherwise the sources are merged using matching names or labels.
 ### Coloring Methods
 Contours are assigned differential shades, with a thicker, darker edge at the root that diminishes while moving closer to the leaves.
 
@@ -42,13 +43,9 @@ Leaves, which are typically unique cell types, are represented by colored circle
 
 **Top-N Cell Types**: Cell types are ranked on highest count using the [standard approach](https://en.wikipedia.org/wiki/Ranking#Standard_competition_ranking_.28.221224.22_ranking.29) and the top N are labeled, with a default N = 10.
 
-**Large Clusters**
+**Large Clusters**: Anatomical structures linked to a minimum of N-cells are labeled, with a default N = 5.
 
-Anatomical structures linked to a minimum of N-cells are labeled, with a default N = 5.
-
-**FTU Nodes**
-
-Labels a collection of FTUs, where an FTU is the largest cluster having all descendant nodes marked as FTU.
+**FTU Nodes**: Labels a collection of FTUs, where an FTU is the largest cluster having all descendant nodes marked as FTU.
 ### Legends
 The cell type legend is based on the coloring approach selected. This would either be the categorical information, such as cell supertypes, or the unique cell types occurring in the dataset.
 
