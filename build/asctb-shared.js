@@ -50,7 +50,12 @@ function isFTUNode(node) {
  * @returns {boolean} A boolean indicating if the node represents a cell type.
 **/
 function isCellTypeNode(node) {
-  const [key, value] = node.data;
+  const [groupKey, value] = node.data;
   if (!Array.isArray(value)) return false;
-  return key === dataAccessor(node).next().value['CT/1'];
+  const data = dataAccessor(node).next().value;
+  return Object.keys(data)
+    // Filter all CT columns
+    .filter(k => /CT\/[0-9]+/.test(k))
+    // Check if grouping key matches any CT column
+    .some(k => groupKey === data[k]);
 }
