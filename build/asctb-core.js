@@ -10,6 +10,7 @@ const Dataset = Object.freeze({
   Skin: 8,
   Thymus: 9,
   Vasculature: 10,
+  Eye: 11
 });
 const LabelingMethod = Object.freeze({
   Unknown: 0,
@@ -77,6 +78,12 @@ const SettingsPreset = Object.freeze({
     rootTitle: 'Thymus',
     ctMatchType: CTMatchType.Unknown
   },
+  [Dataset.Eye]: {
+    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Eye.csv',
+    countCsvSrc: null,
+    rootTitle: 'Eye',
+    ctMatchType: CTMatchType.Unknown
+  }
 });
 const CellSuperType = Object.freeze({
   Unknown: 0,
