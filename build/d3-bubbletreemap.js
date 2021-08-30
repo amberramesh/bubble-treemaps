@@ -494,7 +494,7 @@
                 // Assign color to contour.
                 generatedContour.forEach(function(segment) {
                     segment.parent = cluster.parent;
-                    segment.stroke = `#${Array(6).fill(cluster.parent.depth * 2).map(c => c.toString(16)).join('')}`
+                    segment.stroke = `#${Array(6).fill(cluster.parent.height * 2).map(c => c.toString(16)).join('')}`
                     segment.strokeWidth = cluster.parent.uncertainty;
                 });
 
