@@ -38,9 +38,9 @@ const SettingsPreset = Object.freeze({
   },
   [Dataset.Kidney]: {
     asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Kidney_v1.csv',
-    countCsvSrc: null,
+    countCsvSrc: './html/kidney.csv',
     rootTitle: 'Kidney',
-    ctMatchType: CTMatchType.Unknown
+    ctMatchType: CTMatchType.ID
   },
   [Dataset.LargeIntestine]: {
     asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Large_Intestine_v1.csv',
