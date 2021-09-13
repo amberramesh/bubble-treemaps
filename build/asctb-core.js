@@ -693,6 +693,7 @@ function updateOrganSelection(selectEl) {
   switch (datasetId) {
   case Dataset.Spleen:
   case Dataset.Eye:
+  case Dataset.Kidney:
     colorMap = new Map([
       [CellSuperType.Vasculature.toString(), '#d53e4f'],
       [CellSuperType.Lymph.toString(), '#998ec3'],
