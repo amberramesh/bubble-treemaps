@@ -1,16 +1,32 @@
+const MASTER_TABLE_BASE_PATH = 'https://docs.google.com/spreadsheets/d/1tK916JyG5ZSXW_cXfsyZnzXfjyoN-8B2GXLbYD6_vF0/gviz/tq?tqx=out:csv'
+const AZIMUTH_COUNT_SRC_BASE_PATH = 'https://hubmapconsortium.github.io/asctb-azimuth-data-comparison'
 const Dataset = Object.freeze({
   Unknown: 0,
-  Brain: 1,
-  Heart: 2,
-  Kidney: 3,
-  LargeIntestine: 4,
-  LymphNode: 5,
-  RespiratorySystem: 6,
-  Spleen: 7,
-  Skin: 8,
-  Thymus: 9,
-  Vasculature: 10,
-  Eye: 11
+  Blood: 1,
+  BloodVasculature: 2,
+  BoneMarrow: 3,
+  Brain: 4,
+  Eye: 5,
+  FallopianTube: 6,
+  Heart: 7,
+  Kidney: 8,
+  Knee: 9,
+  LargeIntestine: 10,
+  Liver: 11,
+  Lung: 12,
+  LymphNode: 13,
+  LymphVasulature: 14,
+  Ovary: 15,
+  Pancreas: 16,
+  PeripheralNervousSystem: 17,
+  Prostate: 18,
+  Skin: 19,
+  SmallIntestine: 20,
+  Spleen: 21,
+  Thymus: 22,
+  Ureter: 23,
+  UrinaryBladder: 24,
+  Uterus: 25 
 });
 const LabelingMethod = Object.freeze({
   Unknown: 0,
@@ -24,40 +40,124 @@ const CTMatchType = Object.freeze({
   Name: 2,
 });
 const SettingsPreset = Object.freeze({
+  [Dataset.Blood]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Blood_v1.1`,
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/pbmc.csv`,
+    rootTitle: 'Blood v1.1',
+    ctMatchType: CTMatchType.ID
+  },
+  [Dataset.BloodVasculature]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Blood_Vasculature_v1.1`,
+    countCsvSrc: null,
+    rootTitle: 'Blood Vasculature v1.1',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.BoneMarrow]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Bone_Marrow_v1.1`,
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/bone_marrow.csv`,
+    rootTitle: 'Bone Marrow v1.1',
+    ctMatchType: CTMatchType.ID
+  },
   [Dataset.Brain]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Brain_v1.csv',
-    countCsvSrc: './html/motor_cortex.csv',
-    rootTitle: 'Brain',
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Brain_v1.1`,
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/motor_cortex.csv`,
+    rootTitle: 'Brain v1.1',
     ctMatchType: CTMatchType.Name
   },
-  [Dataset.Heart]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Heart_v1.csv',
+  [Dataset.Eye]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Eye_v1.0`,
     countCsvSrc: null,
-    rootTitle: 'Heart',
+    rootTitle: 'Eye v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.FallopianTube]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Fallopian_Tube_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Fallopian Tube v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Heart]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Heart_v1.1`,
+    countCsvSrc: null,
+    rootTitle: 'Heart v1.1',
     ctMatchType: CTMatchType.Unknown
   },
   [Dataset.Kidney]: {
     asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Kidney_v1.csv',
-    countCsvSrc: './html/kidney.csv',
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/kidney.csv`,
     rootTitle: 'Kidney',
     ctMatchType: CTMatchType.ID
   },
-  [Dataset.LargeIntestine]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Large_Intestine_v1.csv',
+  [Dataset.Knee]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Knee_v1.0`,
     countCsvSrc: null,
-    rootTitle: 'Large Intestine',
+    rootTitle: 'Knee v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.LargeIntestine]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Large_Intestine_v1.1`,
+    countCsvSrc: null,
+    rootTitle: 'Large Intestine v1.1',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Liver]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Liver_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Liver v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Lung]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Lung_v1.1`,
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/lung.csv`,
+    rootTitle: 'Lung v1.1',
     ctMatchType: CTMatchType.Unknown
   },
   [Dataset.LymphNode]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Lymph_Node_v1.csv',
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Lymph_Node_v1.1`,
     countCsvSrc: null,
-    rootTitle: 'Lymph Node',
+    rootTitle: 'Lymph Node v1.1',
     ctMatchType: CTMatchType.Unknown
   },
-  [Dataset.RespiratorySystem]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Lung_v1.csv',
+  [Dataset.LymphVasulature]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Lymph_Vasculature_v1.0`,
     countCsvSrc: null,
-    rootTitle: 'Respiratory System',
+    rootTitle: 'Lymph Vasculature v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Ovary]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Ovary_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Ovary v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Pancreas]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Pancreas_v1.0`,
+    countCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/pancreas.csv`,
+    rootTitle: 'Pancreas v1.0',
+    ctMatchType: CTMatchType.ID
+  },
+  [Dataset.PeripheralNervousSystem]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Peripheral_Nervous_System_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Peripheral Nervous System v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Prostate]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Prostate_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Prostate v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Skin]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Skin_v1.1`,
+    countCsvSrc: null,
+    rootTitle: 'Skin v1.1',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.SmallIntestine]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Small_Intestine_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Small Intestine v1.0',
     ctMatchType: CTMatchType.Unknown
   },
   [Dataset.Spleen]: {
@@ -66,22 +166,28 @@ const SettingsPreset = Object.freeze({
     rootTitle: 'Spleen',
     ctMatchType: CTMatchType.ID
   },
-  [Dataset.Skin]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Skin_v1.csv',
-    countCsvSrc: null,
-    rootTitle: 'Skin',
-    ctMatchType: CTMatchType.Unknown
-  },
   [Dataset.Thymus]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Thymus_v1.csv',
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Thymus_v1.1`,
     countCsvSrc: null,
-    rootTitle: 'Thymus',
+    rootTitle: 'Thymus v1.1',
     ctMatchType: CTMatchType.Unknown
   },
-  [Dataset.Eye]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Eye.csv',
+  [Dataset.Ureter]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Ureter_v1.0`,
     countCsvSrc: null,
-    rootTitle: 'Eye',
+    rootTitle: 'Ureter v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.UrinaryBladder]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Urinary_Bladder_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Urinary Bladder v1.0',
+    ctMatchType: CTMatchType.Unknown
+  },
+  [Dataset.Uterus]: {
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Uterus_v1.0`,
+    countCsvSrc: null,
+    rootTitle: 'Uterus v1.0',
     ctMatchType: CTMatchType.Unknown
   }
 });
@@ -665,7 +771,9 @@ async function generateTreemap() {
   countMap.clear();
   await getCellCount();
   d3.text(settings.asctCsvSrc).then(rootData => {
-    const csvData = d3.csvParse(rootData.split('\n').slice(10).join('\n'));
+    const splitLines = rootData.split('\n')
+    const startIndex = splitLines.findIndex(line => /^"?AS\/[0-9]+/.test(line))
+    const csvData = d3.csvParse(splitLines.slice(startIndex !== -1 ? startIndex : 10).join('\n'))
     const groupRegex = /^(AS|CT)\/[0-9]+$/;
     const groupedData = groupTreeData(csvData, groupRegex);
     if (!settings.fullFTUSubtree) {

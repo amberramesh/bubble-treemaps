@@ -22,17 +22,31 @@
 </head>
 <body onload="init()">
     <select name="organs" onchange="updateOrganSelection(this)">
-      <option value="1">Brain</option>
-      <option value="2" disabled title="This dataset is too large.">Heart</option>
-      <option value="3">Kidney</option>
-      <option value="4">Large Intestine</option>
-      <option value="5">Lymph Node</option>
-      <option value="6" disabled title="This dataset is too large.">Respiratory System</option>
-      <option value="7" selected="selected">Spleen</option>
-      <option value="8">Skin</option>
-      <option value="9">Thymus</option>
-      <option value="10">Vasculature</option>
-      <option value="11">Eye</option>
+      <option value="1">Blood</option>
+      <option value="2">Blood Vasculature</option>
+      <option value="3">Bone Marrow</option>
+      <option value="4">Brain</option>
+      <option value="5">Eye</option>
+      <option value="6">Fallopian Tube</option>
+      <option value="7" disabled title="This dataset is too large.">Heart</option>
+      <option value="8">Kidney</option>
+      <option value="9">Knee</option>
+      <option value="10">Large Intestine</option>
+      <option value="11">Liver</option>
+      <option value="12" disabled title="This dataset is too large.">Lung</option>
+      <option value="13">Lymph Node</option>
+      <option value="14">Lymph Vasculature</option>
+      <option value="15">Ovary</option>
+      <option value="16">Pancreas</option>
+      <option value="17">Peripheral Nervous System</option>
+      <option value="18">Prostate</option>
+      <option value="19">Skin</option>
+      <option value="20">Small Intestine</option>
+      <option value="21" selected="selected">Spleen</option>
+      <option value="22">Thymus</option>
+      <option value="23">Ureter</option>
+      <option value="24">Urinary Bladder</option>
+      <option value="25">Uterus</option>
     </select>
     <button onclick="generateTreemap()">Generate SVG</button>
     <small style="color: gray; display: none" id="busyText">Generating bubble treemap, please wait...</small>
