@@ -1,0 +1,60 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000057,fibroblast,1575
+CL:0000064,ciliated cell,2374
+CL:0000071,blood vessel endothelial cell,47
+CL:0000077,mesothelial cell,17
+CL:0000084,T cell,131
+CL:0000097,mast cell,69
+CL:0000115,endothelial cell,257
+CL:0000151,secretory cell,10779
+CL:0000158,club cell,5559
+CL:0000160,goblet cell,84
+CL:0000186,myofibroblast cell,10
+CL:0000192,smooth muscle cell,121
+CL:0000235,macrophage,12701
+CL:0000236,B cell,549
+CL:0000319,mucus secreting cell,64
+CL:0000359,vascular associated smooth muscle cell,80
+CL:0000451,dendritic cell,316
+CL:0000548,animal cell,2276
+CL:0000624,"CD4-positive, alpha-beta T cell",2601
+CL:0000625,"CD8-positive, alpha-beta T cell",3407
+CL:0000646,basal cell,13107
+CL:0000669,pericyte cell,213
+CL:0000767,basophil,686
+CL:0000775,neutrophil,932
+CL:0000784,plasmacytoid dendritic cell,18
+CL:0000786,plasma cell,272
+CL:0000790,immature alpha-beta T cell,171
+CL:0000791,mature alpha-beta T cell,98
+CL:0000809,"double-positive, alpha-beta thymocyte",6
+CL:0000810,"CD4-positive, alpha-beta thymocyte",3056
+CL:0000811,"CD8-positive, alpha-beta thymocyte",3350
+CL:0000814,mature NK T cell,132
+CL:0000860,classical monocyte,1487
+CL:0000875,non-classical monocyte,1005
+CL:0001044,"effector CD4-positive, alpha-beta T cell",132
+CL:0001050,"effector CD8-positive, alpha-beta T cell",80
+CL:0002062,type I pneumocyte,211
+CL:0002063,type II pneumocyte,9146
+CL:0002138,endothelial cell of lymphatic vessel,47
+CL:0002144,capillary endothelial cell,1534
+CL:0002208,brush cell of bronchus,69
+CL:0002320,connective tissue cell,249
+CL:0002332,ciliated cell of the bronchus,6669
+CL:0002370,respiratory goblet cell,762
+CL:0002393,intermediate monocyte,252
+CL:0002503,adventitial cell,373
+CL:0002543,vein endothelial cell,508
+CL:0002598,bronchial smooth muscle cell,81
+CL:0005006,ionocyte,13
+CL:0017000,pulmonary ionocyte,145
+CL:1000223,lung neuroendocrine cell,74
+CL:1000271,lung ciliated cell,602
+CL:1000312,bronchial goblet cell,43
+CL:1000329,tracheal goblet cell,77
+CL:1000330,serous cell of epithelium of trachea,41
+CL:1000331,serous cell of epithelium of bronchus,15
+CL:1000349,basal cell of epithelium of bronchus,9584
+CL:1000413,endothelial cell of artery,1401
+CL:2000016,lung microvascular endothelial cell,485

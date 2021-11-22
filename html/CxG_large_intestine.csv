@@ -1,0 +1,84 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000057,fibroblast,953
+,Fibroblast Progenitor,261
+,Fibroblasts G2M-phase,30
+,Fibroblasts S-phase,117
+,Myofibroblasts,116
+,Proximal S2 (1),1
+,Proximal S2 (2),1
+,S1,2
+,S1 COL6A5+,1
+,S3,85
+,S3 EBF+,47
+,S3 HAND1+,52
+,S3 Progenitor,88
+CL:0000097,mast cell,38
+CL:0000100,Excitory Motor Neuron,1
+CL:0000125,Differentiating Submucosal Glial,94
+,Intraganglionic Glial,154
+,Lymphoid Associated Glial,13
+CL:0000131,Arterial (L),54
+,Arterial (M),1
+,Endothelium S-phase,2
+,gut endothelial cell,53
+,Lymphatic,56
+,Venous (CP) 2,34
+,Venous (L),47
+,Venous (M) 1,1
+,Venous (M) 2,17
+CL:0000151,Secretory Progenitors,90
+CL:0000160,goblet cell,166
+CL:0000164,EECs,41
+CL:0000165,Neuroendocrine (2),17
+CL:0000186,Myofibroblast Progenitors,64
+,Myofibroblasts S-phase,95
+CL:0000235,Macrophages,4
+,Macrophages SPP1+,134
+CL:0000236,B cell,497
+,B-Cells,105
+CL:0000451,DCs,4
+CL:0000576,monocyte,543
+,Monocytes,1
+CL:0000584,BEST4/OTOP2 Cells,922
+,Distal Enterocytes,133
+,Distal Mature Enterocytes,41
+,enterocyte,1464
+,Proximal Early Enterocytes,11
+CL:0000623,NKs & Å’â‰¥Å’Â¥,23
+CL:0000624,"CD4-positive, alpha-beta T cell",2872
+CL:0000625,"CD8-positive, alpha-beta T cell",2147
+CL:0000669,Angiogenic Pericytes,20
+,BMPER+ Pericytes,2
+,Contractile Pericytes,23
+,Pericyte Progenitors,14
+,Pericytes G2M-phase,21
+,Pericytes S-phase,1
+,Undifferentiated Pericytes,1
+,WNT6+ Pericytes,1
+CL:0000677,Distal Absorptive,46
+CL:0000738,Cell Cycle,36
+CL:0000764,Erythroid,88
+CL:0000775,neutrophil,27
+CL:0000784,pDCs,8
+CL:0000786,plasma cell,330
+CL:0000898,Naive T-Cells,3
+CL:0001071,Type 3 ILCs,5
+CL:0002071,enterocyte of epithelium of large intestine,2764
+CL:0002088,ICC KIT+,2
+,ICC PDGFRA+,157
+CL:0002250,intestinal crypt stem cell,143
+CL:0002504,Muscularis G2M-phase,1
+,Muscularis S-phase,3
+CL:0008015,Inhibitory Motor Neuron Precursor,27
+CL:0009009,paneth cell of epithelium of large intestine,888
+CL:0009011,Distal TA,26
+,transit amplifying cell of large intestine,208
+CL:0009012,Proximal TA,322
+CL:0009016,Distal Stem Cells,73
+,intestinal crypt stem cell of large intestine,114
+CL:0009017,Proximal Stem Cells,13
+CL:0011026,Proximal Progenitor,85
+CL:0019031,Goblets,710
+CL:0019032,intestinal tuft cell,33
+CL:1000320,large intestine goblet cell,385
+CL:1001516,intestinal enteroendocrine cell,55

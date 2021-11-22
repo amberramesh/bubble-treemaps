@@ -1,0 +1,21 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000057,fibroblast,113
+CL:0000097,mast cell,65
+CL:0000131,gut endothelial cell,46
+CL:0000160,goblet cell,61
+CL:0000236,B cell,519
+CL:0000576,monocyte,61
+CL:0000584,enterocyte,942
+CL:0000624,"CD4-positive, alpha-beta T cell",5257
+CL:0000625,"CD8-positive, alpha-beta T cell",2323
+CL:0000775,neutrophil,68
+CL:0000786,plasma cell,303
+CL:0002250,intestinal crypt stem cell,102
+CL:0009012,transit amplifying cell of small intestine,227
+CL:0009017,intestinal crypt stem cell of small intestine,71
+CL:0019032,intestinal tuft cell,160
+CL:1000334,enterocyte of epithelium of small intestine,1100
+CL:1000343,paneth cell of epithelium of small intestine,647
+CL:1000495,small intestine goblet cell,300
+CL:1001516,intestinal enteroendocrine cell,58
+CL:1001589,duodenum glandular cell,44

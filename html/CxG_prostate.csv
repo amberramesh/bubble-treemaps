@@ -1,0 +1,42 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000019,sperm,11
+CL:0000038,erythroid progenitor cell,86
+CL:0000057,fibroblast,223
+CL:0000066,epithelial cell,6848
+CL:0000084,T cell,586
+CL:0000094,granulocyte,23
+CL:0000097,mast cell,9
+CL:0000115,endothelial cell,585
+CL:0000151,secretory cell,5386
+CL:0000158,club cell,1078
+CL:0000165,neuroendocrine cell,45
+CL:0000192,smooth muscle cell,285
+CL:0000235,macrophage,317
+CL:0000236,B cell,5
+CL:0000359,vascular associated smooth muscle cell,158
+CL:0000451,dendritic cell,81
+CL:0000499,stromal cell,32
+CL:0000576,monocyte,33
+CL:0000625,"CD8-positive, alpha-beta T cell",1081
+CL:0000669,pericyte cell,272
+CL:0000738,leukocyte,663
+CL:0000763,myeloid cell,365
+CL:0000775,neutrophil,16
+CL:0000786,plasma cell,8
+CL:0000810,"CD4-positive, alpha-beta thymocyte",107
+CL:0000814,mature NK T cell,433
+CL:0000860,classical monocyte,24
+CL:0000875,non-classical monocyte,18
+CL:0001044,"effector CD4-positive, alpha-beta T cell",15
+CL:0001050,"effector CD8-positive, alpha-beta T cell",1
+CL:0002340,luminal cell of prostate epithelium,5950
+CL:0002341,basal cell of prostate epithelium,47508
+CL:0002394,CD141-positive myeloid dendritic cell,3
+CL:0002399,CD1c-positive myeloid dendritic cell,86
+CL:0002622,prostate stromal cell,585
+CL:1000296,epithelial cell of urethra,10669
+CL:1000299,fibroblast of connective tissue of prostate,1168
+CL:1000304,fibroblast of connective tissue of nonglandular part of prostate,323
+CL:1000305,fibroblast of connective tissue of glandular part of prostate,684
+CL:1000487,smooth muscle cell of prostate,1509
+CL:2000059,prostate gland microvascular endothelial cell,3915

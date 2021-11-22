@@ -1,0 +1,31 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000057,fibroblast,8459
+CL:0000066,epithelial cell,106
+CL:0000084,T cell,2234
+CL:0000097,mast cell,649
+CL:0000115,endothelial cell,5057
+CL:0000134,mesenchymal stem cell,1311
+CL:0000148,melanocyte,64
+CL:0000186,myofibroblast cell,982
+CL:0000187,muscle cell,437
+CL:0000188,cell of skeletal muscle,10
+CL:0000192,smooth muscle cell,29
+CL:0000235,macrophage,3653
+CL:0000236,B cell,23
+CL:0000453,Langerhans cell,36
+CL:0000492,CD4-positive helper T cell,59
+CL:0000499,stromal cell,2943
+CL:0000738,leukocyte,160
+CL:0000775,neutrophil,440
+CL:0000786,plasma cell,50
+CL:0000787,memory B cell,9
+CL:0000788,naive B cell,7
+CL:0000794,"CD8-positive, alpha-beta cytotoxic T cell",129
+CL:0000814,mature NK T cell,1177
+CL:0000815,regulatory T cell,126
+CL:0000895,"naive thymus-derived CD4-positive, alpha-beta T cell",71
+CL:0000897,"CD4-positive, alpha-beta memory T cell",339
+CL:0000900,"naive thymus-derived CD8-positive, alpha-beta T cell",88
+CL:0000909,"CD8-positive, alpha-beta memory T cell",857
+CL:0002394,CD141-positive myeloid dendritic cell,17
+CL:0002399,CD1c-positive myeloid dendritic cell,165

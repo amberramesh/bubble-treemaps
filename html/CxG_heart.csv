@@ -1,0 +1,31 @@
+﻿AS/1/ID,AS/1,AS/1/COUNT
+CL:0000057,fibroblast,59341
+CL:0000077,mesothelial cell,718
+CL:0000097,mast cell,1543
+CL:0000115,endothelial cell,13263
+CL:0000182,hepatocyte,1089
+CL:0000192,smooth muscle cell,16464
+CL:0000235,macrophage,14714
+CL:0000236,B cell,1195
+CL:0000451,dendritic cell,814
+CL:0000576,monocyte,1684
+CL:0000623,natural killer cell,3628
+CL:0000669,pericyte cell,77856
+CL:0000746,cardiac muscle cell,7205
+CL:0000794,"CD8-positive, alpha-beta cytotoxic T cell",2956
+CL:0000814,mature NK T cell,1463
+CL:0000896,"activated CD4-positive, alpha-beta T cell",1047
+CL:0000906,"activated CD8-positive, alpha-beta T cell",3001
+CL:0000934,"CD4-positive, alpha-beta cytotoxic T cell",3113
+CL:0001054,CD14-positive monocyte,1883
+CL:0002129,regular atrial cardiac myocyte,23483
+CL:0002131,regular ventricular cardiac myocyte,125289
+CL:0002138,endothelial cell of lymphatic vessel,754
+CL:0002144,capillary endothelial cell,57759
+CL:0002319,neural cell,3961
+CL:0002397,"CD14-positive, CD16-positive monocyte",3278
+CL:0002543,vein endothelial cell,8486
+CL:0002548,fibroblast of cardiac tissue,250
+CL:0010008,cardiac endothelial cell,2665
+CL:1000309,epicardial adipocyte,3799
+CL:1000413,endothelial cell of artery,20317

@@ -48,6 +48,10 @@
       <option value="24">Urinary Bladder</option>
       <option value="25">Uterus</option>
     </select>
+    <select name="countSrc" onchange="updateCountSrc(this)">
+      <option value="1" selected="selected">Azimuth</option>
+      <option value="2">CZI</option>
+    </select>
     <button onclick="generateTreemap()">Generate SVG</button>
     <small style="color: gray; display: none" id="busyText">Generating bubble treemap, please wait...</small>
     <a href="https://github.com/hubmapconsortium/bubble-treemaps#readme" style="float:right">About</a>
