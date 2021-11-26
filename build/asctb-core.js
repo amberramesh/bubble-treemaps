@@ -94,7 +94,7 @@ const SettingsPreset = Object.freeze({
     ctMatchType: CTMatchType.ID
   },
   [Dataset.Kidney]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Kidney_v1.csv',
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Kidney_v1.1`,
     azimuthCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/kidney.csv`,
     cziCsvSrc: `${CZI_COUNT_SRC_BASE_PATH}/CxG_kidney.csv`,
     rootTitle: 'Kidney',
@@ -181,7 +181,7 @@ const SettingsPreset = Object.freeze({
     ctMatchType: CTMatchType.ID
   },
   [Dataset.Spleen]: {
-    asctCsvSrc: './html/ASCT+B_Tables_Standard_Format_3-24-2021_-_Spleen_v1.6.csv',
+    asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Spleen_v1.1`,
     azimuthCsvSrc: './html/azimuth-spleen-cell-sets.json.csv',
     cziCsvSrc: `${CZI_COUNT_SRC_BASE_PATH}/CxG_spleen.csv`,
     rootTitle: 'Spleen',
