@@ -41,7 +41,7 @@ function* dataAccessor({ data }) {
  * @returns {boolean} A boolean indicating if the node is an FTU. 
  */
 function isFTUNode(node) {
-  return [...dataAccessor(node)].every(data => !!data['FTU']);
+  return [...dataAccessor(node)].every(data => !!data['FTU/1']);
 }
 
 /**

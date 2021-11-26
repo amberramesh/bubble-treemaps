@@ -46,6 +46,14 @@ const CTMatchType = Object.freeze({
   Name: 2,
 });
 const SettingsPreset = Object.freeze({
+  [Dataset.Unknown]: {
+    asctCsvSrc: null,
+    azimuthCsvSrc: null,
+    cziCsvSrc: null,
+    superTypesSrc: null,
+    rootTitle: '',
+    ctMatchType: CTMatchType.Unknown
+  },
   [Dataset.Blood]: {
     asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Blood_v1.1`,
     azimuthCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/pbmc.csv`,
@@ -77,6 +85,7 @@ const SettingsPreset = Object.freeze({
     asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Eye_v1.0`,
     azimuthCsvSrc: null,
     cziCsvSrc: `${CZI_COUNT_SRC_BASE_PATH}/CxG_eye.csv`,
+    superTypesSrc: './html/SuperTypes_Eye.csv',
     rootTitle: 'Eye v1.0',
     ctMatchType: CTMatchType.ID
   },
@@ -97,6 +106,7 @@ const SettingsPreset = Object.freeze({
     asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Kidney_v1.1`,
     azimuthCsvSrc: `${AZIMUTH_COUNT_SRC_BASE_PATH}/kidney.csv`,
     cziCsvSrc: `${CZI_COUNT_SRC_BASE_PATH}/CxG_kidney.csv`,
+    superTypesSrc: './html/SuperTypes_Kidney.csv',
     rootTitle: 'Kidney',
     ctMatchType: CTMatchType.ID
   },
@@ -184,6 +194,7 @@ const SettingsPreset = Object.freeze({
     asctCsvSrc: `${MASTER_TABLE_BASE_PATH}&sheet=Spleen_v1.1`,
     azimuthCsvSrc: './html/azimuth-spleen-cell-sets.json.csv',
     cziCsvSrc: `${CZI_COUNT_SRC_BASE_PATH}/CxG_spleen.csv`,
+    superTypesSrc: './html/SuperTypes_Spleen.csv',
     rootTitle: 'Spleen',
     ctMatchType: CTMatchType.ID
   },
@@ -226,6 +237,7 @@ const CellSuperType = Object.freeze({
   Muscle: 7,
 });
 const CellSuperTypeLabel = Object.freeze({
+  [CellSuperType.Unknown]: 'Unknown',
   [CellSuperType.Vasculature]: 'Vasculature',
   [CellSuperType.Lymph]: 'Lymph',
   [CellSuperType.Nerve]: 'Nerve',
@@ -243,6 +255,7 @@ const settings = Object.seal({
   countSrc: null,
   azimuthCsvSrc: null,
   cziCsvSrc: null,
+  superTypesSrc: null,
   rootTitle: null,
   ctMatchType: CTMatchType.Unknown,
   circleRadius: 8,
@@ -804,10 +817,29 @@ async function generateTreemap() {
   document.getElementById('busyText').style.display = 'inline';
   countMap.clear();
   await getCellCount();
-  d3.text(settings.asctCsvSrc).then(rootData => {
+  d3.text(settings.asctCsvSrc).then(async rootData => {
     const splitLines = rootData.split('\n')
     const startIndex = splitLines.findIndex(line => /^"?AS\/[0-9]+/.test(line))
     const csvData = d3.csvParse(splitLines.slice(startIndex !== -1 ? startIndex : 10).join('\n'))
+
+    // Check for supertype map, if it exists
+    if (settings.superTypesSrc) {
+      const superTypesCsv = await d3.csv(settings.superTypesSrc)
+      const superTypeMap = new Map()
+      for (const row of superTypesCsv) {
+        superTypeMap.set(row['CT/1'], row['CT/1/SUPERTYPE'])
+      }
+
+      for (const row of csvData) {
+        const cellType = row['CT/1']
+        if (superTypeMap.has(cellType)) {
+          row['CT/1/SUPERTYPE'] = superTypeMap.get(cellType)
+        } else {
+          row['CT/1/SUPERTYPE'] = CellSuperType.Unknown.toString()
+        }
+      }
+    }
+
     const groupRegex = /^(AS|CT)\/[0-9]+$/;
     const groupedData = groupTreeData(csvData, groupRegex);
     if (!settings.fullFTUSubtree) {
@@ -827,7 +859,9 @@ async function generateTreemap() {
  * @param {Dataset} selectEl.value The dataset ID.
  */
 function updateOrganSelection(selectEl) {
-  const datasetId = parseInt(selectEl.value);
+  const datasetId = parseInt(selectEl.value)
+  // Reset settings
+  Object.assign(settings, SettingsPreset[Dataset.Unknown])
   if (SettingsPreset[datasetId]) {
     Object.assign(settings, SettingsPreset[datasetId]);
   }
@@ -837,6 +871,7 @@ function updateOrganSelection(selectEl) {
   case Dataset.Eye:
   case Dataset.Kidney:
     colorMap = new Map([
+      [CellSuperType.Unknown.toString(), '#ffffff'],
       [CellSuperType.Vasculature.toString(), '#d53e4f'],
       [CellSuperType.Lymph.toString(), '#998ec3'],
       [CellSuperType.Nerve.toString(), '#99d594'],
